@@ -17,6 +17,7 @@ models/
   griffin/griffin_model.py      # Griffin hybrid model (recurrence + attention)
   hawk/hawk_model.py            # Hawk pure recurrence model
   local_attention/attention_model.py # Local Attention pure attention model
+
 training/trainer.py             # Training utilities
 evaluation/evaluator.py         # Evaluation utilities
 data/mqar/mqar_dataset.py       # MQAR dataset loader
@@ -141,9 +142,9 @@ python quick_start.py --longseq
 jupyter notebook notebooks/01_model_analysis.ipynb
 ```
 
-## 🎓 For Thesis Work
+## 🎓 For Practical Work
 
-This repository is designed for academic research and thesis development:
+This repository is designed for academic research and mini-thesis development:
 
 ### Key Contributions
 1. **Implementation**: Clean, documented implementation of Griffin architecture
@@ -170,12 +171,6 @@ This repository is designed for academic research and thesis development:
 - **Attention Mechanisms**: [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
 - **Mamba**: [Selective State Space Models](https://arxiv.org/abs/2312.00752)
 
-## 🤝 Contributing
 
-This is a research implementation. Contributions welcome for:
-- Model improvements and optimizations
-- Additional evaluation tasks and metrics
-- Enhanced analysis and visualization tools
-- Documentation and examples
 
 
