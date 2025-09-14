@@ -1,0 +1,3 @@
+# Griffin Hybrid Memory Models: Recurrence + Attention
+
+This repository provides a minimal, research-ready framework for benchmarking hybrid neural architectures that combine recurrence and attention mechanisms. The main focus is on the Griffin model, which integrates gated recurrence with local attention, and compares it to pure recurrent (Hawk) and pure attention (Local Attention) baselines. The repo is designed for fair, reproducible experiments on memory-intensive tasks, with clear modular code and easy analysis tools.

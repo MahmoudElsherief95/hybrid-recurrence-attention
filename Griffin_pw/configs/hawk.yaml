@@ -1,0 +1,10 @@
+# Hawk model configuration
+vocab_size: 32000
+d_model: 512
+num_layers: 6
+max_seq_len: 2048
+gate_type: "glu"
+activation: "swish"
+dropout: 0.1
+layer_norm: true
+tie_embeddings: true

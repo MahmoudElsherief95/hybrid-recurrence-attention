@@ -1,0 +1,54 @@
+{
+  "MQAR": {
+    "Griffin": {
+      "parameters": 3798144,
+      "final_loss": 1.6321353524923325,
+      "latency_sec_per_step": 3.48786997795105,
+      "throughput_samples_per_sec": 2.2936634824614655,
+      "cpu_mem_peak_mb": 564.92578125,
+      "gpu_mem_peak_mb": 0
+    },
+    "Hawk": {
+      "parameters": 2043360,
+      "final_loss": 7.0781688570976256,
+      "latency_sec_per_step": 3.5658058702945707,
+      "throughput_samples_per_sec": 2.243532118965052,
+      "cpu_mem_peak_mb": 537.25,
+      "gpu_mem_peak_mb": 0
+    },
+    "Local Attention": {
+      "parameters": 1667520,
+      "final_loss": 1.887409234046936,
+      "latency_sec_per_step": 0.5263920426368713,
+      "throughput_samples_per_sec": 15.197798127656645,
+      "cpu_mem_peak_mb": 520.25,
+      "gpu_mem_peak_mb": 0
+    }
+  },
+  "Chomsky": {
+    "Griffin": {
+      "parameters": 3649392,
+      "final_loss": 0.7916946336627007,
+      "latency_sec_per_step": 1.7794335901737213,
+      "throughput_samples_per_sec": 4.495812624970726,
+      "cpu_mem_peak_mb": 554.96875,
+      "gpu_mem_peak_mb": 0
+    },
+    "Hawk": {
+      "parameters": 1894608,
+      "final_loss": 0.8248212352395058,
+      "latency_sec_per_step": 1.68819317817688,
+      "throughput_samples_per_sec": 4.738794175580896,
+      "cpu_mem_peak_mb": 540.12890625,
+      "gpu_mem_peak_mb": 0
+    },
+    "Local Attention": {
+      "parameters": 1518768,
+      "final_loss": 0.8023524485528469,
+      "latency_sec_per_step": 0.21602395176887512,
+      "throughput_samples_per_sec": 37.03293053614366,
+      "cpu_mem_peak_mb": 550.26953125,
+      "gpu_mem_peak_mb": 0
+    }
+  }
+}
