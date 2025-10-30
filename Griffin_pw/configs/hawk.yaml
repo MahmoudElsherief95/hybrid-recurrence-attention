@@ -8,3 +8,23 @@ activation: "swish"
 dropout: 0.1
 layer_norm: true
 tie_embeddings: true
+
+# Training hyperparameters
+batch_size: 32
+learning_rate: 0.001
+weight_decay: 0.01
+num_epochs: 20
+optimizer: "adamw"
+scheduler: "cosine"
+
+# Dataset options
+dataset: "Chomsky"  # or "MQAR"
+sequence_length: 512
+dataset_difficulty: "medium"  # e.g., easy, medium, hard
+
+# Logging and evaluation
+logging:
+  tensorboard: true
+  log_interval: 50
+  save_checkpoints: true
+  checkpoint_interval: 5

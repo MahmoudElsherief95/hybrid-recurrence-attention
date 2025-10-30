@@ -90,58 +90,55 @@ class ParenthesesDataset(ChomskyDataset):
     - Invalid: "(()", "())", "()("
     """
     
-    def __init__(self, num_sequences: int = 10000, max_length: int = 64, **kwargs):
+    def __init__(self, num_sequences: int = 10000, max_length: int = 512, min_nesting: int = 32, **kwargs):
         self.paren_types = ['()', '[]', '{}']
+        self.min_nesting = min_nesting
         super().__init__(num_sequences, max_length, **kwargs)
-    
+
     def _generate_balanced_sequence(self, length: int) -> str:
-        """Generate a balanced parentheses sequence."""
+        """Generate a deeply nested balanced parentheses sequence."""
         if length == 0 or length % 2 != 0:
             return ""
-        
-        sequence = []
-        stack = []
-        pairs = length // 2
-        
-        # Choose parentheses types
+        max_nesting = max(1, length // 2)
+        min_nesting = min(self.min_nesting, max_nesting)
+        if min_nesting > max_nesting:
+            min_nesting = max_nesting
+        nesting = random.randint(min_nesting, max_nesting)
         paren_type = random.choice(self.paren_types)
         open_paren, close_paren = paren_type[0], paren_type[1]
-        
-        for _ in range(length):
-            if len(stack) == 0 or (len(stack) < pairs and random.random() < 0.6):
-                # Add opening parenthesis
-                sequence.append(open_paren)
-                stack.append(open_paren)
+        sequence = [open_paren] * nesting + [close_paren] * nesting
+        remaining = length - 2 * nesting
+        # Add random pairs and single parentheses to increase difficulty
+        for _ in range(remaining // 2):
+            if random.random() < 0.5:
+                sequence.insert(nesting, open_paren)
+                sequence.insert(nesting + 1, close_paren)
             else:
-                # Add closing parenthesis
-                sequence.append(close_paren)
-                stack.pop()
-        
-        # Ensure all are closed
-        while stack:
-            sequence.append(close_paren)
-            stack.pop()
-        
+                sequence.insert(nesting, random.choice([open_paren, close_paren]))
+        # Add random single parentheses to remaining positions
+        for _ in range(remaining % 2):
+            sequence.insert(nesting, random.choice([open_paren, close_paren]))
         return ''.join(sequence)
-    
+
     def _generate_unbalanced_sequence(self, length: int) -> str:
-        """Generate an unbalanced parentheses sequence."""
-        paren_type = random.choice(self.paren_types)
-        open_paren, close_paren = paren_type[0], paren_type[1]
-        
-        sequence = []
-        for _ in range(length):
-            sequence.append(random.choice([open_paren, close_paren]))
-        
-        # Ensure it's actually unbalanced
-        seq_str = ''.join(sequence)
-        if self._is_balanced(seq_str):
-            # Force imbalance
-            if len(sequence) > 0:
-                sequence[0] = close_paren
-        
-        return ''.join(sequence)
-    
+        """Generate a highly non-trivial unbalanced parentheses sequence."""
+        # Start with a deeply nested balanced sequence
+        seq_str = self._generate_balanced_sequence(length)
+        seq_list = list(seq_str)
+        # Introduce many errors: remove, swap, or insert wrong parentheses
+        num_errors = random.randint(max(8, length // 32), max(16, length // 16))
+        for _ in range(num_errors):
+            if len(seq_list) > 0:
+                idx = random.randint(0, len(seq_list) - 1)
+                action = random.choice(['remove', 'swap', 'insert'])
+                if action == 'remove':
+                    seq_list.pop(idx)
+                elif action == 'swap':
+                    seq_list[idx] = random.choice(['(', ')', '[', ']', '{', '}'])
+                elif action == 'insert':
+                    seq_list.insert(idx, random.choice(['(', ')', '[', ']', '{', '}']))
+        return ''.join(seq_list)
+
     def _is_balanced(self, sequence: str) -> bool:
         """Check if a parentheses sequence is balanced."""
         stack = []
@@ -323,6 +320,38 @@ class RegularLanguageDataset(ChomskyDataset):
             self.labels.append(label)
 
 
+class AnBnDataset(torch.utils.data.Dataset):
+    """
+    PyTorch Dataset for a^n b^n classification (valid/invalid).
+    Uses train/test splits from generate_an_bn_dataset.
+    """
+    def __init__(self, data, max_length=256, vocab=['a', 'b']):
+        self.data = data
+        self.vocab = vocab
+        self.char_to_idx = {c: i for i, c in enumerate(vocab)}
+        self.PAD_TOKEN = len(vocab)
+        self.SOS_TOKEN = len(vocab) + 1
+        self.EOS_TOKEN = len(vocab) + 2
+        self.total_vocab_size = len(vocab) + 3
+        self.max_length = max_length
+    def __len__(self):
+        return len(self.data)
+    def __getitem__(self, idx):
+        seq, label = self.data[idx]
+        encoded = [self.SOS_TOKEN] + [self.char_to_idx[c] for c in seq] + [self.EOS_TOKEN]
+        if len(encoded) < self.max_length:
+            encoded += [self.PAD_TOKEN] * (self.max_length - len(encoded))
+        else:
+            encoded = encoded[:self.max_length]
+        input_ids = torch.tensor(encoded, dtype=torch.long)
+        label_tensor = torch.tensor(label, dtype=torch.long)
+        attention_mask = (input_ids != self.PAD_TOKEN).long()
+        return {
+            'input_ids': input_ids,
+            'labels': label_tensor,
+            'attention_mask': attention_mask
+        }
+
 def create_chomsky_datasets(
     dataset_type: str = "parentheses",
     train_size: int = 8000,
@@ -405,30 +434,69 @@ def evaluate_classification_accuracy(
     return correct / total if total > 0 else 0.0
 
 
-if __name__ == "__main__":
-    # Test datasets
-    datasets = {
-        "Parentheses": ParenthesesDataset(100),
-        "A^n B^n": ABnDataset(100),
-        "A^n B^n C^n": ABCnDataset(100),
-        "Regular (ab)*": RegularLanguageDataset(100)
-    }
+def generate_an_bn_dataset(train_n_range=(1, 10), test_n_range=(20, 40, 80, 160), num_train=5000, num_test=1000, vocab=['a', 'b'], hard_negatives=True):
+    """
+    Generate a^n b^n dataset with train/test splits and hard negatives.
+    Returns: train_data, test_data (list of (sequence, label))
+    """
+    def make_positive(n):
+        return ''.join(['a'] * n + ['b'] * n), 1
+    def make_hard_negative(n):
+        # Off-by-one, shuffled, extra/missing tokens
+        options = [
+            ''.join(['a'] * n + ['b'] * (n-1)),
+            ''.join(['a'] * (n-1) + ['b'] * n),
+            ''.join(['a'] * n + ['b'] * n + ['a']),
+            ''.join(['b'] * n + ['a'] * n),
+            ''.join(['a'] * n + ['b'] * n + ['b']),
+        ]
+        return random.choice(options), 0
+    train_data = []
+    for _ in range(num_train):
+        n = random.randint(train_n_range[0], train_n_range[1])
+        if random.random() < 0.5:
+            train_data.append(make_positive(n))
+        else:
+            train_data.append(make_hard_negative(n))
+    test_data = []
+    for n in test_n_range:
+        for _ in range(num_test // len(test_n_range)):
+            if random.random() < 0.5:
+                test_data.append(make_positive(n))
+            else:
+                test_data.append(make_hard_negative(n))
+    return train_data, test_data
+
+# Test datasets
+datasets = {
+    "Parentheses": ParenthesesDataset(100),
+    "A^n B^n": ABnDataset(100),
+    "A^n B^n C^n": ABCnDataset(100),
+    "Regular (ab)*": RegularLanguageDataset(100)
+}
+
+for name, dataset in datasets.items():
+    print(f"\n{name} Dataset:")
+    print(f"Size: {len(dataset)}")
+    print(f"Vocab size: {dataset.total_vocab_size}")
     
-    for name, dataset in datasets.items():
-        print(f"\n{name} Dataset:")
-        print(f"Size: {len(dataset)}")
-        print(f"Vocab size: {dataset.total_vocab_size}")
-        
-        sample = dataset[0]
-        print(f"Sample input shape: {sample['input_ids'].shape}")
-        print(f"Sample label: {sample['labels'].item()}")
-        
-        # Decode and show a few examples
-        for i in range(3):
-            sample = dataset[i]
-            input_ids = sample['input_ids'].tolist()
-            # Remove special tokens and padding for display
-            clean_ids = [idx for idx in input_ids if idx not in [dataset.PAD_TOKEN, dataset.SOS_TOKEN, dataset.EOS_TOKEN]]
-            decoded = dataset._decode_sequence(clean_ids)
-            label = sample['labels'].item()
-            print(f"  Example {i+1}: '{decoded}' -> {label}")
+    sample = dataset[0]
+    print(f"Sample input shape: {sample['input_ids'].shape}")
+    print(f"Sample label: {sample['labels'].item()}")
+    
+    # Decode and show a few examples
+    for i in range(3):
+        sample = dataset[i]
+        input_ids = sample['input_ids'].tolist()
+        # Remove special tokens and padding for display
+        clean_ids = [idx for idx in input_ids if idx not in [dataset.PAD_TOKEN, dataset.SOS_TOKEN, dataset.EOS_TOKEN]]
+        decoded = dataset._decode_sequence(clean_ids)
+        label = sample['labels'].item()
+        print(f"  Example {i+1}: '{decoded}' -> {label}")
+
+train_data, test_data = generate_an_bn_dataset()
+print(f"\nGenerated A^n B^n Dataset:")
+print(f"Train size: {len(train_data)}")
+print(f"Test size: {len(test_data)}")
+print(f"Sample train sequence: {train_data[0][0]} -> Label: {train_data[0][1]}")
+print(f"Sample test sequence: {test_data[0][0]} -> Label: {test_data[0][1]}")

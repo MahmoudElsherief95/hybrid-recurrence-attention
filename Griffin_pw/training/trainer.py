@@ -153,80 +153,93 @@ class BaseTrainer:
                 
                 # Gradient clipping
                 if self.config['training'].get('gradient_clip_norm'):
-                    self.scaler.unscale_(self.optimizer)
-                    torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(),
-                        self.config['training']['gradient_clip_norm']
+                    self.model.train()
+                    total_loss = 0.0
+                    total_tokens = 0
+                    start_time = time.time()
+                    cpu_mem_start = torch.cuda.memory_allocated() if torch.cuda.is_available() else 0
+                    gpu_mem_start = torch.cuda.memory_allocated() if torch.cuda.is_available() else 0
+                    progress_bar = tqdm(
+                        self.train_dataloader,
+                        desc=f"Epoch {self.current_epoch + 1}",
+                        leave=False
                     )
-                
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
-            else:
-                loss.backward()
-                
-                # Gradient clipping
-                if self.config['training'].get('gradient_clip_norm'):
-                    torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(),
-                        self.config['training']['gradient_clip_norm']
-                    )
-                
-                self.optimizer.step()
-            
-            # Update statistics
-            batch_size = input_ids.shape[0]
-            seq_len = input_ids.shape[1]
-            total_loss += loss.item() * batch_size
-            total_tokens += batch_size * seq_len
-            
-            # Update progress bar
-            progress_bar.set_postfix({
-                'loss': f"{loss.item():.4f}",
-                'lr': f"{self.optimizer.param_groups[0]['lr']:.2e}"
-            })
-            
-            # Log to tensorboard
-            if self.writer and self.global_step % self.config['logging']['log_interval'] == 0:
-                self.writer.add_scalar('Train/Loss', loss.item(), self.global_step)
-                self.writer.add_scalar('Train/LearningRate', 
-                                     self.optimizer.param_groups[0]['lr'], self.global_step)
-                self.writer.add_scalar('Train/Perplexity', 
-                                     math.exp(min(loss.item(), 10)), self.global_step)
-            
-            self.global_step += 1
-            
-            # Validation
-            if (self.global_step % self.config['logging']['eval_interval'] == 0):
-                val_metrics = self.validate()
-                self._log_metrics(val_metrics, 'Val')
-                self.model.train()  # Return to training mode
-        
-        avg_loss = total_loss / len(self.train_dataloader.dataset)
-        return {'loss': avg_loss, 'perplexity': math.exp(min(avg_loss, 10))}
-    
-    def validate(self) -> Dict[str, float]:
-        """Validate the model."""
-        self.model.eval()
-        total_loss = 0.0
-        total_tokens = 0
-        
-        with torch.no_grad():
-            for batch in tqdm(self.val_dataloader, desc="Validation", leave=False):
-                input_ids = batch['input_ids'].to(self.device)
-                labels = batch['labels'].to(self.device)
-                attention_mask = batch.get('attention_mask')
-                if attention_mask is not None:
-                    attention_mask = attention_mask.to(self.device)
-                
-                outputs = self.model(input_ids, attention_mask=attention_mask)
-                logits = outputs['logits'] if isinstance(outputs, dict) else outputs
-                loss = self._compute_loss(logits, labels, attention_mask)
-                
-                batch_size = input_ids.shape[0]
-                seq_len = input_ids.shape[1]
-                total_loss += loss.item() * batch_size
-                total_tokens += batch_size * seq_len
-        
+                    for batch_idx, batch in enumerate(progress_bar):
+                        self.optimizer.zero_grad()
+                        # Move batch to device
+                        input_ids = batch['input_ids'].to(self.device)
+                        labels = batch['labels'].to(self.device)
+                        attention_mask = batch.get('attention_mask')
+                        if attention_mask is not None:
+                            attention_mask = attention_mask.to(self.device)
+                        # Forward pass
+                        if self.use_mixed_precision:
+                            with torch.cuda.amp.autocast():
+                                outputs = self.model(input_ids, attention_mask=attention_mask)
+                                logits = outputs['logits'] if isinstance(outputs, dict) else outputs
+                                loss = self._compute_loss(logits, labels, attention_mask)
+                        else:
+                            outputs = self.model(input_ids, attention_mask=attention_mask)
+                            logits = outputs['logits'] if isinstance(outputs, dict) else outputs
+                            loss = self._compute_loss(logits, labels, attention_mask)
+                        # Backward pass
+                        if self.use_mixed_precision:
+                            self.scaler.scale(loss).backward()
+                            # Gradient clipping
+                            if self.config['training'].get('gradient_clip_norm'):
+                                self.scaler.unscale_(self.optimizer)
+                                torch.nn.utils.clip_grad_norm_(
+                                    self.model.parameters(),
+                                    self.config['training']['gradient_clip_norm']
+                                )
+                            self.scaler.step(self.optimizer)
+                            self.scaler.update()
+                        else:
+                            loss.backward()
+                            # Gradient clipping
+                            if self.config['training'].get('gradient_clip_norm'):
+                                torch.nn.utils.clip_grad_norm_(
+                                    self.model.parameters(),
+                                    self.config['training']['gradient_clip_norm']
+                                )
+                            self.optimizer.step()
+                        # Update statistics
+                        batch_size = input_ids.shape[0]
+                        seq_len = input_ids.shape[1]
+                        total_loss += loss.item() * batch_size
+                        total_tokens += batch_size * seq_len
+                        # Update progress bar
+                        progress_bar.set_postfix({
+                            'loss': f"{loss.item():.4f}",
+                            'lr': f"{self.optimizer.param_groups[0]['lr']:.2e}"
+                        })
+                        # Log to tensorboard
+                        if self.writer and self.global_step % self.config['logging']['log_interval'] == 0:
+                            self.writer.add_scalar('Train/Loss', loss.item(), self.global_step)
+                            self.writer.add_scalar('Train/LearningRate', 
+                                                 self.optimizer.param_groups[0]['lr'], self.global_step)
+                            self.writer.add_scalar('Train/Perplexity', 
+                                                 math.exp(min(loss.item(), 10)), self.global_step)
+                        self.global_step += 1
+                        # Validation
+                        if (self.global_step % self.config['logging']['eval_interval'] == 0):
+                            val_metrics = self.validate()
+                            self._log_metrics(val_metrics, 'Val')
+                            self.model.train()  # Return to training mode
+                    avg_loss = total_loss / len(self.train_dataloader.dataset)
+                    end_time = time.time()
+                    cpu_mem_peak = torch.cuda.memory_allocated() if torch.cuda.is_available() else 0
+                    gpu_mem_peak = torch.cuda.max_memory_allocated() if torch.cuda.is_available() else 0
+                    latency_sec_per_step = (end_time - start_time) / len(self.train_dataloader)
+                    throughput_samples_per_sec = len(self.train_dataloader.dataset) / (end_time - start_time)
+                    return {
+                        'loss': avg_loss,
+                        'perplexity': math.exp(min(avg_loss, 10)),
+                        'latency_sec_per_step': latency_sec_per_step,
+                        'throughput_samples_per_sec': throughput_samples_per_sec,
+                        'cpu_mem_peak_mb': cpu_mem_peak / (1024 * 1024),
+                        'gpu_mem_peak_mb': gpu_mem_peak / (1024 * 1024)
+                    }
         avg_loss = total_loss / len(self.val_dataloader.dataset)
         return {'loss': avg_loss, 'perplexity': math.exp(min(avg_loss, 10))}
     

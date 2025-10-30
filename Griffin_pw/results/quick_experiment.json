@@ -1,54 +1,170 @@
 {
-  "MQAR": {
-    "Griffin": {
-      "parameters": 3798144,
-      "final_loss": 1.6321353524923325,
-      "latency_sec_per_step": 3.48786997795105,
-      "throughput_samples_per_sec": 2.2936634824614655,
-      "cpu_mem_peak_mb": 564.92578125,
-      "gpu_mem_peak_mb": 0
+  "scenario_1": {
+    "MQAR": {
+      "Griffin": {
+        "parameters": 3798144,
+        "final_loss": 1.6321353524923325,
+        "latency_sec_per_step": 3.2120678782463075,
+        "throughput_samples_per_sec": 2.490607391636991,
+        "cpu_mem_peak_mb": 611.125,
+        "gpu_mem_peak_mb": 0
+      },
+      "Hawk": {
+        "parameters": 2043360,
+        "final_loss": 7.0781688570976256,
+        "latency_sec_per_step": 3.151057493686676,
+        "throughput_samples_per_sec": 2.5388302231960087,
+        "cpu_mem_peak_mb": 600.109375,
+        "gpu_mem_peak_mb": 0
+      },
+      "Local Attention": {
+        "parameters": 1667520,
+        "final_loss": 1.887409234046936,
+        "latency_sec_per_step": 0.4256496071815491,
+        "throughput_samples_per_sec": 18.79480179242318,
+        "cpu_mem_peak_mb": 576.3828125,
+        "gpu_mem_peak_mb": 0
+      }
     },
-    "Hawk": {
-      "parameters": 2043360,
-      "final_loss": 7.0781688570976256,
-      "latency_sec_per_step": 3.5658058702945707,
-      "throughput_samples_per_sec": 2.243532118965052,
-      "cpu_mem_peak_mb": 537.25,
-      "gpu_mem_peak_mb": 0
+    "Chomsky": {
+      "Griffin": {
+        "parameters": 3654288,
+        "final_loss": 0.85881552323699,
+        "latency_sec_per_step": 4.555254435539245,
+        "throughput_samples_per_sec": 1.7562136458471984,
+        "cpu_mem_peak_mb": 650.296875,
+        "gpu_mem_peak_mb": 0
+      },
+      "Hawk": {
+        "parameters": 1899504,
+        "final_loss": 0.8704593300819397,
+        "latency_sec_per_step": 3.9074025630950926,
+        "throughput_samples_per_sec": 2.047395903242465,
+        "cpu_mem_peak_mb": 615.46875,
+        "gpu_mem_peak_mb": 0
+      },
+      "Local Attention": {
+        "parameters": 1523664,
+        "final_loss": 0.8364769399166108,
+        "latency_sec_per_step": 0.3490911781787872,
+        "throughput_samples_per_sec": 22.9166490019487,
+        "cpu_mem_peak_mb": 646.53515625,
+        "gpu_mem_peak_mb": 0
+      }
     },
-    "Local Attention": {
-      "parameters": 1667520,
-      "final_loss": 1.887409234046936,
-      "latency_sec_per_step": 0.5263920426368713,
-      "throughput_samples_per_sec": 15.197798127656645,
-      "cpu_mem_peak_mb": 520.25,
-      "gpu_mem_peak_mb": 0
+    "long_sequence_generalization": {
+      "sequence_lengths": [
+        128,
+        256,
+        512,
+        1024,
+        2048
+      ],
+      "Griffin": [
+        7.041427135467529,
+        7.039100170135498,
+        7.0428314208984375,
+        6.972692012786865,
+        7.060271739959717
+      ],
+      "Hawk": [
+        7.097297191619873,
+        6.991241931915283,
+        7.024892330169678,
+        7.0599470138549805,
+        7.059304237365723
+      ],
+      "Local Attention": [
+        7.018466472625732,
+        7.00351619720459,
+        7.081967830657959,
+        7.056144714355469,
+        7.099246501922607
+      ]
     }
   },
-  "Chomsky": {
-    "Griffin": {
-      "parameters": 3649392,
-      "final_loss": 0.7916946336627007,
-      "latency_sec_per_step": 1.7794335901737213,
-      "throughput_samples_per_sec": 4.495812624970726,
-      "cpu_mem_peak_mb": 554.96875,
-      "gpu_mem_peak_mb": 0
+  "scenario_2": {
+    "MQAR": {
+      "Griffin": {
+        "parameters": 15656448,
+        "final_loss": 0.507579791918397,
+        "latency_sec_per_step": 31.254799211025237,
+        "throughput_samples_per_sec": 0.25596069090016654,
+        "cpu_mem_peak_mb": 3603.39453125,
+        "gpu_mem_peak_mb": 0
+      },
+      "Hawk": {
+        "parameters": 8285696,
+        "final_loss": NaN,
+        "latency_sec_per_step": 27.769725728034974,
+        "throughput_samples_per_sec": 0.28808350785847286,
+        "cpu_mem_peak_mb": 3109.12890625,
+        "gpu_mem_peak_mb": 0
+      },
+      "Local Attention": {
+        "parameters": 6706688,
+        "final_loss": 0.5744603786617517,
+        "latency_sec_per_step": 4.43362380862236,
+        "throughput_samples_per_sec": 1.804393053024001,
+        "cpu_mem_peak_mb": 2980.2109375,
+        "gpu_mem_peak_mb": 0
+      }
     },
-    "Hawk": {
-      "parameters": 1894608,
-      "final_loss": 0.8248212352395058,
-      "latency_sec_per_step": 1.68819317817688,
-      "throughput_samples_per_sec": 4.738794175580896,
-      "cpu_mem_peak_mb": 540.12890625,
-      "gpu_mem_peak_mb": 0
+    "Chomsky": {
+      "Griffin": {
+        "parameters": 15400704,
+        "final_loss": 1.0333843961358071,
+        "latency_sec_per_step": 44.21166068315506,
+        "throughput_samples_per_sec": 0.18094773813931975,
+        "cpu_mem_peak_mb": 3829.515625,
+        "gpu_mem_peak_mb": 0
+      },
+      "Hawk": {
+        "parameters": 8029952,
+        "final_loss": NaN,
+        "latency_sec_per_step": 40.35451540350914,
+        "throughput_samples_per_sec": 0.19824299511484997,
+        "cpu_mem_peak_mb": 3490.66015625,
+        "gpu_mem_peak_mb": 0
+      },
+      "Local Attention": {
+        "parameters": 6450944,
+        "final_loss": 0.8707675561308861,
+        "latency_sec_per_step": 5.76445289850235,
+        "throughput_samples_per_sec": 1.38781600628196,
+        "cpu_mem_peak_mb": 2744.96875,
+        "gpu_mem_peak_mb": 0
+      }
     },
-    "Local Attention": {
-      "parameters": 1518768,
-      "final_loss": 0.8023524485528469,
-      "latency_sec_per_step": 0.21602395176887512,
-      "throughput_samples_per_sec": 37.03293053614366,
-      "cpu_mem_peak_mb": 550.26953125,
-      "gpu_mem_peak_mb": 0
+    "long_sequence_generalization": {
+      "sequence_lengths": [
+        256,
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "Griffin": [
+        7.138153553009033,
+        7.117995262145996,
+        7.1399407386779785,
+        7.117344379425049,
+        7.142186164855957
+      ],
+      "Hawk": [
+        7.108646869659424,
+        7.112932205200195,
+        7.108336448669434,
+        7.094277858734131,
+        7.133843898773193
+      ],
+      "Local Attention": [
+        7.089144229888916,
+        7.103786468505859,
+        7.171703338623047,
+        7.071956634521484,
+        7.139488220214844
+      ]
     }
   }
 }
