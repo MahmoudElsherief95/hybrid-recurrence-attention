@@ -51,8 +51,8 @@ requirements.txt                   # Dependencies
 
 ### Key Points
 - All results are now saved in `results/quick_experiment.json` (including long-sequence generalization)
-- Only one main notebook: `notebooks/01_model_analysis.ipynb`
-- No duplicate or obsolete files/folders
+- Only one main notebook: `notebooks/model_analysis.ipynb`
+
 
 ---
 
