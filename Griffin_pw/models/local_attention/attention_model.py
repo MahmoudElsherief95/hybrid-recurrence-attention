@@ -1,6 +1,7 @@
 """
 Local Attention Model Implementation
-Pure attention-based model with local attention mechanism
+Pure attention-based baseline with causal local sliding-window attention.
+Uses RMSNorm (matching Griffin/Hawk) for a fair comparison.
 """
 
 import torch
@@ -8,6 +9,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, Dict, Any, Tuple
 import math
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from griffin.gated_linear_recurrence import RMSNorm, GatedMLP
+from griffin.local_attention import RotaryEmbedding, _rotate_half
 
 
 class LocalAttentionBlock(nn.Module):
@@ -29,16 +34,11 @@ class LocalAttentionBlock(nn.Module):
         self.k_proj = nn.Linear(d_model, d_model, bias=bias)
         self.v_proj = nn.Linear(d_model, d_model, bias=bias)
         self.out_proj = nn.Linear(d_model, d_model, bias=bias)
-        self.ffn = nn.Sequential(
-            nn.Linear(d_model, 4 * d_model),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(4 * d_model, d_model),
-            nn.Dropout(dropout)
-        )
-        self.attention_norm = nn.LayerNorm(d_model)
-        self.ffn_norm = nn.LayerNorm(d_model)
-        self.dropout = nn.Dropout(dropout)
+        self.ffn = GatedMLP(d_model, d_model * 4)
+        self.attention_norm = RMSNorm(d_model)
+        self.ffn_norm = RMSNorm(d_model)
+        self.dropout = nn.Dropout(0.0)  # official default: no attention dropout
+        self.rotary = RotaryEmbedding(self.head_dim)
         self._init_parameters()
     
     def _init_parameters(self):
@@ -53,8 +53,9 @@ class LocalAttentionBlock(nn.Module):
         mask = torch.zeros(seq_len, seq_len, dtype=torch.bool, device=device)
         
         for i in range(seq_len):
-            start = max(0, i - self.local_window // 2)
-            end = min(seq_len, i + self.local_window // 2 + 1)
+            # Causal (backward-only): token i can only see tokens i-window+1 .. i
+            start = max(0, i - self.local_window + 1)
+            end = i + 1
             mask[i, start:end] = True
         
         return mask
@@ -85,7 +86,12 @@ class LocalAttentionBlock(nn.Module):
         q = self.q_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         k = self.k_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         v = self.v_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
-        
+
+        # Apply RoPE to Q and K
+        cos, sin = self.rotary(seq_len, x.device)
+        q = q * cos + _rotate_half(q) * sin
+        k = k * cos + _rotate_half(k) * sin
+
         # Attention scores
         scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
         
@@ -100,7 +106,8 @@ class LocalAttentionBlock(nn.Module):
             scores = scores.masked_fill(~attention_mask, float('-inf'))
         
         # Attention weights and output
-        attention_weights = F.softmax(scores, dim=-1)
+        # nan_to_num handles rows that are entirely masked (all -inf → 0 after softmax)
+        attention_weights = F.softmax(scores, dim=-1).nan_to_num(0.0)
         attention_weights = self.dropout(attention_weights)
         
         out = torch.matmul(attention_weights, v)
@@ -120,37 +127,22 @@ class LocalAttentionBlock(nn.Module):
 
 
 class LocalAttentionModel(nn.Module):
-    """Local Attention Model - Pure attention-based model with local attention."""
+    """Local Attention Model — pure causal sliding-window attention baseline."""
     def __init__(self, config: dict):
         super().__init__()
         self.vocab_size = config["vocab_size"]
         d_model = config["d_model"]
         self.num_layers = config["num_layers"]
         self.num_heads = config["num_heads"]
-        self.max_seq_len = config.get("max_seq_len", 2048)
-        self.local_window = config.get("local_window", 256)
+        self.local_window = config.get("local_window", 64)
         self.token_embedding = nn.Embedding(self.vocab_size, d_model)
-        self.positional_embedding = nn.Embedding(self.max_seq_len, d_model)
+        nn.init.normal_(self.token_embedding.weight, std=(1.0 / d_model) ** 0.5)
         self.blocks = nn.ModuleList([
             LocalAttentionBlock(config) for _ in range(self.num_layers)
         ])
-        self.output_norm = nn.LayerNorm(d_model)
+        self.output_norm = RMSNorm(d_model)
         self.lm_head = nn.Linear(d_model, self.vocab_size, bias=False)
-        if config.get("tie_embeddings", True):
-            self.lm_head.weight = self.token_embedding.weight
-        self.dropout = nn.Dropout(config.get("dropout", 0.1))
-        self._init_parameters()
-    
-    def _init_parameters(self):
-        """Initialize parameters"""
-        nn.init.normal_(self.token_embedding.weight, std=0.02)
-        nn.init.normal_(self.positional_embedding.weight, std=0.02)
-        
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.xavier_uniform_(module.weight)
-                if module.bias is not None:
-                    nn.init.zeros_(module.bias)
+        self.lm_head.weight = self.token_embedding.weight  # tie weights
     
     def forward(
         self,
@@ -173,47 +165,29 @@ class LocalAttentionModel(nn.Module):
         Returns:
             Dictionary with logits and optional hidden states/attentions
         """
-        batch_size, seq_len = input_ids.shape
-        
-        # Embeddings
-        position_ids = torch.arange(seq_len, device=input_ids.device).unsqueeze(0)
-        position_ids = position_ids.expand(batch_size, -1)
-        
-        token_embeds = self.token_embedding(input_ids)
-        pos_embeds = self.positional_embedding(position_ids)
-        x = token_embeds + pos_embeds
-        x = self.dropout(x)
-        
-        # Process through attention blocks
-        all_hidden_states = []
-        all_attentions = []
-        
+        # No positional embeddings — matches Griffin/Hawk treatment
+        x = self.token_embedding(input_ids)
+
+        all_hidden_states, all_attentions = [], []
         for block in self.blocks:
             if output_hidden_states:
                 all_hidden_states.append(x)
-            
             x, attention_weights = block(x, attention_mask)
-            
             if output_attentions:
                 all_attentions.append(attention_weights)
-        
-        # Final layer norm
+
         x = self.output_norm(x)
-        
         if output_hidden_states:
             all_hidden_states.append(x)
-        
-        # Language modeling head
+
         logits = self.lm_head(x)
-        
         if return_dict:
             return {
                 'logits': logits,
                 'hidden_states': all_hidden_states if output_hidden_states else None,
-                'attentions': all_attentions if output_attentions else None
+                'attentions': all_attentions if output_attentions else None,
             }
-        else:
-            return logits
+        return logits
     
     def generate(
         self,

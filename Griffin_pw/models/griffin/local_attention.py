@@ -10,6 +10,31 @@ from typing import Optional, Tuple
 import math
 
 
+# ---------------------------------------------------------------------------
+# Rotary Position Embeddings (RoPE) — matches official RecurrentGemma repo
+# ---------------------------------------------------------------------------
+
+def _rotate_half(x: torch.Tensor) -> torch.Tensor:
+    x1, x2 = x.chunk(2, dim=-1)
+    return torch.cat([-x2, x1], dim=-1)
+
+
+class RotaryEmbedding(nn.Module):
+    """RoPE: Rotary Position Embeddings (Su et al. 2021). Used in Griffin attention blocks."""
+    def __init__(self, dim: int, base: int = 10000):
+        super().__init__()
+        inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float() / dim))
+        self.register_buffer('inv_freq', inv_freq)
+
+    def forward(self, seq_len: int, device: torch.device) -> Tuple[torch.Tensor, torch.Tensor]:
+        t = torch.arange(seq_len, device=device).float()
+        freqs = torch.einsum('i,j->ij', t, self.inv_freq)  # (L, dim/2)
+        emb = torch.cat([freqs, freqs], dim=-1)             # (L, dim)
+        cos = emb.cos()[None, None, :, :]                   # (1, 1, L, dim)
+        sin = emb.sin()[None, None, :, :]
+        return cos, sin
+
+
 class LocalAttention(nn.Module):
     """
     Local Attention mechanism with sliding window approach.
@@ -24,7 +49,7 @@ class LocalAttention(nn.Module):
         d_model: int,
         num_heads: int,
         local_window: int = 256,
-        dropout: float = 0.1,
+        dropout: float = 0.0,
         bias: bool = True
     ):
         super().__init__()
@@ -44,9 +69,10 @@ class LocalAttention(nn.Module):
         # Output projection
         self.out_proj = nn.Linear(d_model, d_model, bias=bias)
         
-        # Dropout
+        # Dropout (official default: 0.0)
         self.dropout = nn.Dropout(dropout)
-        
+        # RoPE — matches official RecurrentGemma repo
+        self.rotary = RotaryEmbedding(self.head_dim)
         # Initialize parameters
         self._init_parameters()
     
@@ -71,9 +97,9 @@ class LocalAttention(nn.Module):
         mask = torch.zeros(seq_len, seq_len, dtype=torch.bool, device=device)
         
         for i in range(seq_len):
-            # Define window boundaries
-            start = max(0, i - self.local_window // 2)
-            end = min(seq_len, i + self.local_window // 2 + 1)
+            # Causal (backward-only): token i can only see tokens i-window+1 .. i
+            start = max(0, i - self.local_window + 1)
+            end = i + 1
             mask[i, start:end] = True
         
         return mask
@@ -106,7 +132,12 @@ class LocalAttention(nn.Module):
         k = k.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         v = v.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         # Now: (B, H, L, D_head)
-        
+
+        # Apply RoPE to Q and K (matches official repo)
+        cos, sin = self.rotary(seq_len, x.device)
+        q = q * cos + _rotate_half(q) * sin
+        k = k * cos + _rotate_half(k) * sin
+
         # Compute attention scores
         scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
         # scores: (B, H, L, L)
@@ -233,3 +264,18 @@ class MultiHeadLocalAttention(nn.Module):
             current_input = current_input + ffn_output
         
         return current_input, all_attention_weights
+
+
+class LocalAttentionBlock(nn.Module):
+    """
+    Single local attention block (temporal mixing only, no MLP).
+    Used inside Griffin's ResidualBlock — matches official repo LocalAttentionBlock.
+    Returns (output, None) to match RecurrentBlock signature.
+    """
+    def __init__(self, d_model: int, num_heads: int, local_window: int = 64):
+        super().__init__()
+        self.attn = LocalAttention(d_model=d_model, num_heads=num_heads, local_window=local_window)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out, _ = self.attn(x)
+        return out

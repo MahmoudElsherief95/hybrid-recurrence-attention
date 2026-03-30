@@ -1,6 +1,6 @@
-# Hawk model configuration
-vocab_size: 32000
-d_model: 512
+# Hawk model configuration (matching RecurrentGemma paper)
+vocab_size: 1000  # Smaller vocab for synthetic tasks
+d_model: 144
 num_layers: 6
 max_seq_len: 2048
 gate_type: "glu"
@@ -18,7 +18,7 @@ optimizer: "adamw"
 scheduler: "cosine"
 
 # Dataset options
-dataset: "Chomsky"  # or "MQAR"
+dataset: "Chomsky"  # or "MQAR" or "Copy"
 sequence_length: 512
 dataset_difficulty: "medium"  # e.g., easy, medium, hard
 

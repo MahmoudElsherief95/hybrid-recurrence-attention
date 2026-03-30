@@ -1,165 +1,138 @@
 """
-Griffin Model Implementation
-Hybrid model combining Gated Linear Recurrences with Local Attention
-Based on the official RecurrentGemma implementation from Google DeepMind
+Griffin Model Implementation — matches official RecurrentGemma repo exactly.
 
 Reference: https://github.com/google-deepmind/recurrentgemma
-Paper: https://arxiv.org/abs/2402.19427
+Paper: Griffin arxiv 2402.19427
+
+Architecture:
+  - Blocks ALTERNATE between RECURRENT and ATTENTION: [REC, REC, ATT, REC, REC, ATT, ...]
+  - Each ResidualBlock: RMSNorm → temporal_block → residual → RMSNorm → GatedMLP → residual
+  - Recurrent block: two-branch (y-gate × x-Conv1D-RGLRU)
+  - Attention block: causal local multi-head attention with sliding window
+  - No positional embeddings (position encoded via RoPE in attention, implicit in recurrence)
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, List
 import math
+import itertools
 
-from .gated_linear_recurrence import MultiLayerGatedRecurrence
-from .local_attention import MultiHeadLocalAttention
+from .gated_linear_recurrence import RMSNorm, RecurrentBlock, GatedMLP
+from .local_attention import LocalAttentionBlock
 
 
-class GriffinBlock(nn.Module):
+# Block type constants — matching official repo common.py
+RECURRENT = "RECURRENT"
+ATTENTION  = "ATTENTION"
+
+
+def _make_griffin_block_types(num_layers: int) -> List[str]:
+    """Griffin pattern: [REC, REC, ATT] cycling — matches official repo."""
+    pattern = itertools.cycle([RECURRENT, RECURRENT, ATTENTION])
+    return list(itertools.islice(pattern, num_layers))
+
+
+class ResidualBlock(nn.Module):
     """
-    Single Griffin block combining recurrence and attention.
+    Single Griffin residual block — either RECURRENT or ATTENTION type.
+    Matches official repo modules.py ResidualBlock exactly.
+
+    Structure:
+        raw_x  → temporal_pre_norm → temporal_block → + raw_x
+               → channel_pre_norm  → GatedMLP         → + residual
     """
-    
-    def __init__(self, config: dict):
+    def __init__(self, width: int, num_heads: int, local_window: int,
+                 block_type: str, mlp_expanded_width: Optional[int] = None):
         super().__init__()
-        d_model = config["d_model"]
-        self.mixing_alpha = config.get("mixing_alpha", 0.5)
-        self.layer_norm = config.get("layer_norm", True)
-        self.recurrence = MultiLayerGatedRecurrence(
-            hidden_size=d_model,
-            num_layers=1,
-            gate_type=config.get("gate_type", "glu"),
-            activation=config.get("activation", "swish"),
-            dropout=config.get("dropout", 0.1),
-            layer_norm=False
-        )
-        self.attention = MultiHeadLocalAttention(
-            d_model=d_model,
-            num_heads=config["num_heads"],
-            num_layers=1,
-            local_window=config.get("local_window", 256),
-            dropout=config.get("dropout", 0.1),
-            layer_norm=False
-        )
-        if self.layer_norm:
-            self.recurrence_norm = nn.LayerNorm(d_model)
-            self.attention_norm = nn.LayerNorm(d_model)
-            self.output_norm = nn.LayerNorm(d_model)
-        self.recurrence_proj = nn.Linear(d_model, d_model)
-        self.attention_proj = nn.Linear(d_model, d_model)
-        self.ffn = nn.Sequential(
-            nn.Linear(d_model, 4 * d_model),
-            nn.GELU(),
-            nn.Dropout(config.get("dropout", 0.1)),
-            nn.Linear(4 * d_model, d_model),
-            nn.Dropout(config.get("dropout", 0.1))
-        )
-        if self.layer_norm:
-            self.ffn_norm = nn.LayerNorm(d_model)
-    
-    def forward(self, x, hidden_states=None, attention_mask=None):
-        residual = x
-        recurrence_input = self.recurrence_norm(x) if self.layer_norm else x
-        recurrence_output, new_hidden_states = self.recurrence(recurrence_input, hidden_states)
-        recurrence_output = self.recurrence_proj(recurrence_output)
-        attention_input = self.attention_norm(x) if self.layer_norm else x
-        attention_output, _ = self.attention(attention_input, attention_mask)
-        attention_output = self.attention_proj(attention_output)
-        mixed_output = self.mixing_alpha * recurrence_output + (1 - self.mixing_alpha) * attention_output
-        x = residual + mixed_output
-        ffn_input = self.ffn_norm(x) if self.layer_norm else x
-        ffn_output = self.ffn(ffn_input)
-        output = x + ffn_output
-        if self.layer_norm:
-            output = self.output_norm(output)
-        return output, new_hidden_states
+        self.block_type = block_type
+        self.temporal_pre_norm = RMSNorm(width)
+        self.channel_pre_norm = RMSNorm(width)
+        self.mlp = GatedMLP(width, mlp_expanded_width or width * 4)
+
+        if block_type == RECURRENT:
+            self.temporal_block = RecurrentBlock(width, num_heads)
+        else:
+            self.temporal_block = LocalAttentionBlock(
+                d_model=width, num_heads=num_heads, local_window=local_window
+            )
+
+    def forward(
+        self, x: torch.Tensor, hidden_state: Optional[torch.Tensor] = None
+    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+        raw_x = x
+        # Temporal mixing (recurrent or attention)
+        normed = self.temporal_pre_norm(raw_x)
+        if self.block_type == RECURRENT:
+            temporal_out, new_h = self.temporal_block(normed, hidden_state)
+        else:
+            temporal_out, new_h = self.temporal_block(normed), None
+
+        residual = temporal_out + raw_x
+        # Channel mixing (gated MLP)
+        out = self.mlp(self.channel_pre_norm(residual)) + residual
+        return out, new_h
 
 
 class GriffinModel(nn.Module):
     """
-    Complete Griffin Model implementation.
-    
-    This model combines gated linear recurrences with local attention
-    for efficient sequence modeling.
+    Griffin Model — exact architecture from the paper and official repo.
+
+    Block pattern: [RECURRENT, RECURRENT, ATTENTION, RECURRENT, RECURRENT, ATTENTION, ...]
+    No positional embeddings — position is handled implicitly.
     """
-    
+
     def __init__(self, config: dict):
         super().__init__()
         self.vocab_size = config["vocab_size"]
         d_model = config["d_model"]
         self.num_layers = config["num_layers"]
-        self.max_seq_len = config.get("max_seq_len", 2048)
+
+        block_types = _make_griffin_block_types(self.num_layers)
+        num_heads  = config.get("num_heads", 8)
+        local_win  = config.get("local_window", 64)
+        mlp_width  = config.get("mlp_expanded_width", d_model * 4)
+
         self.token_embedding = nn.Embedding(self.vocab_size, d_model)
-        self.positional_embedding = nn.Embedding(self.max_seq_len, d_model)
+        nn.init.normal_(self.token_embedding.weight, std=math.sqrt(1.0 / d_model))
+
         self.blocks = nn.ModuleList([
-            GriffinBlock(config) for _ in range(self.num_layers)
+            ResidualBlock(
+                width=d_model, num_heads=num_heads,
+                local_window=local_win, block_type=bt,
+                mlp_expanded_width=mlp_width,
+            )
+            for bt in block_types
         ])
-        if config.get("layer_norm", True):
-            self.output_norm = nn.LayerNorm(d_model)
+        self.output_norm = RMSNorm(d_model)
         self.lm_head = nn.Linear(d_model, self.vocab_size, bias=False)
-        if config.get("tie_embeddings", True):
-            self.lm_head.weight = self.token_embedding.weight
-        self.dropout = nn.Dropout(config.get("dropout", 0.1))
-        self._init_parameters()
-    
-    def _init_parameters(self):
-        """Initialize parameters with appropriate scales"""
-        # Initialize embeddings
-        nn.init.normal_(self.token_embedding.weight, std=0.02)
-        nn.init.normal_(self.positional_embedding.weight, std=0.02)
-        
-        # Initialize linear layers
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.xavier_uniform_(module.weight)
-                if module.bias is not None:
-                    nn.init.zeros_(module.bias)
-    
-    def forward(self, input_ids, attention_mask=None, hidden_states=None, output_hidden_states=False, return_dict=True):
-        batch_size, seq_len = input_ids.shape
-        position_ids = torch.arange(seq_len, device=input_ids.device).unsqueeze(0).expand(batch_size, -1)
-        x = self.token_embedding(input_ids) + self.positional_embedding(position_ids)
-        x = self.dropout(x)
+        self.lm_head.weight = self.token_embedding.weight  # tie weights
+
+    def forward(self, input_ids, attention_mask=None, hidden_states=None,
+                output_hidden_states=False, return_dict=True):
+        # Embed tokens — no positional embeddings (position implicit in recurrence + RoPE in attention)
+        x = self.token_embedding(input_ids)
+
         if hidden_states is None:
             hidden_states = [None] * self.num_layers
+
         all_hidden_states, new_hidden_states = [], []
         for i, block in enumerate(self.blocks):
             if output_hidden_states:
                 all_hidden_states.append(x)
-            x, block_hidden = block(x, hidden_states[i], attention_mask)
+            x, block_hidden = block(x, hidden_states[i])
             new_hidden_states.append(block_hidden)
-        if hasattr(self, 'output_norm'):
-            x = self.output_norm(x)
+
+        x = self.output_norm(x)
         if output_hidden_states:
             all_hidden_states.append(x)
+
         logits = self.lm_head(x)
         if return_dict:
-            return {'logits': logits, 'hidden_states': all_hidden_states if output_hidden_states else None, 'new_hidden_states': new_hidden_states}
+            return {
+                'logits': logits,
+                'hidden_states': all_hidden_states if output_hidden_states else None,
+                'new_hidden_states': new_hidden_states,
+            }
         return logits
-    
-    def generate(self, input_ids, max_length=100, temperature=1.0, top_p=0.9, do_sample=True):
-        self.eval()
-        batch_size, current_length = input_ids.shape
-        hidden_states = None
-        generated = input_ids.clone()
-        with torch.no_grad():
-            for _ in range(max_length - current_length):
-                outputs = self.forward(generated, hidden_states=hidden_states, return_dict=True)
-                next_token_logits = outputs['logits'][:, -1, :] / temperature
-                hidden_states = outputs['new_hidden_states']
-                if do_sample:
-                    sorted_logits, sorted_indices = torch.sort(next_token_logits, descending=True)
-                    cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
-                    sorted_indices_to_remove = cumulative_probs > top_p
-                    sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
-                    sorted_indices_to_remove[..., 0] = 0
-                    indices_to_remove = sorted_indices_to_remove.scatter(1, sorted_indices, sorted_indices_to_remove)
-                    next_token_logits[indices_to_remove] = float('-inf')
-                    probs = F.softmax(next_token_logits, dim=-1)
-                    next_token = torch.multinomial(probs, num_samples=1)
-                else:
-                    next_token = torch.argmax(next_token_logits, dim=-1, keepdim=True)
-                generated = torch.cat([generated, next_token], dim=1)
-        return generated

@@ -468,35 +468,35 @@ def generate_an_bn_dataset(train_n_range=(1, 10), test_n_range=(20, 40, 80, 160)
     return train_data, test_data
 
 # Test datasets
-datasets = {
-    "Parentheses": ParenthesesDataset(100),
-    "A^n B^n": ABnDataset(100),
-    "A^n B^n C^n": ABCnDataset(100),
-    "Regular (ab)*": RegularLanguageDataset(100)
-}
+if __name__ == '__main__':
+    datasets = {
+        "Parentheses": ParenthesesDataset(100),
+        "A^n B^n": ABnDataset(100),
+        "A^n B^n C^n": ABCnDataset(100),
+        "Regular (ab)*": RegularLanguageDataset(100)
+    }
 
-for name, dataset in datasets.items():
-    print(f"\n{name} Dataset:")
-    print(f"Size: {len(dataset)}")
-    print(f"Vocab size: {dataset.total_vocab_size}")
-    
-    sample = dataset[0]
-    print(f"Sample input shape: {sample['input_ids'].shape}")
-    print(f"Sample label: {sample['labels'].item()}")
-    
-    # Decode and show a few examples
-    for i in range(3):
-        sample = dataset[i]
-        input_ids = sample['input_ids'].tolist()
-        # Remove special tokens and padding for display
-        clean_ids = [idx for idx in input_ids if idx not in [dataset.PAD_TOKEN, dataset.SOS_TOKEN, dataset.EOS_TOKEN]]
-        decoded = dataset._decode_sequence(clean_ids)
-        label = sample['labels'].item()
-        print(f"  Example {i+1}: '{decoded}' -> {label}")
+    for name, dataset in datasets.items():
+        print(f"\n{name} Dataset:")
+        print(f"Size: {len(dataset)}")
+        print(f"Vocab size: {dataset.total_vocab_size}")
 
-train_data, test_data = generate_an_bn_dataset()
-print(f"\nGenerated A^n B^n Dataset:")
-print(f"Train size: {len(train_data)}")
-print(f"Test size: {len(test_data)}")
-print(f"Sample train sequence: {train_data[0][0]} -> Label: {train_data[0][1]}")
-print(f"Sample test sequence: {test_data[0][0]} -> Label: {test_data[0][1]}")
+        sample = dataset[0]
+        print(f"Sample input shape: {sample['input_ids'].shape}")
+        print(f"Sample label: {sample['labels'].item()}")
+
+        # Decode and show a few examples
+        for i in range(3):
+            sample = dataset[i]
+            input_ids = sample['input_ids'].tolist()
+            clean_ids = [idx for idx in input_ids if idx not in [dataset.PAD_TOKEN, dataset.SOS_TOKEN, dataset.EOS_TOKEN]]
+            decoded = dataset._decode_sequence(clean_ids)
+            label = sample['labels'].item()
+            print(f"  Example {i+1}: '{decoded}' -> {label}")
+
+    train_data, test_data = generate_an_bn_dataset()
+    print(f"\nGenerated A^n B^n Dataset:")
+    print(f"Train size: {len(train_data)}")
+    print(f"Test size: {len(test_data)}")
+    print(f"Sample train sequence: {train_data[0][0]} -> Label: {train_data[0][1]}")
+    print(f"Sample test sequence: {test_data[0][0]} -> Label: {test_data[0][1]}")

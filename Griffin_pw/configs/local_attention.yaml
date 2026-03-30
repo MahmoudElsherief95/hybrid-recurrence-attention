@@ -1,10 +1,10 @@
-# Local Attention model configuration
-vocab_size: 32000
-d_model: 512
+# Local Attention model configuration (matching RecurrentGemma paper)
+vocab_size: 1000  # Smaller vocab for synthetic tasks
+d_model: 144
 num_layers: 6
-num_heads: 8
+num_heads: 4
 max_seq_len: 2048
-local_window: 256
+local_window: 64  # Smaller window for efficiency
 dropout: 0.1
 layer_norm: true
 tie_embeddings: true
@@ -18,7 +18,7 @@ optimizer: "adamw"
 scheduler: "cosine"
 
 # Dataset options
-dataset: "MQAR"  # or "Chomsky"
+dataset: "MQAR"  # or "Chomsky" or "Copy"
 sequence_length: 512
 dataset_difficulty: "medium"  # e.g., easy, medium, hard
 

@@ -31,6 +31,7 @@ class MQARDataset(Dataset):
         num_kv_pairs: int = 16,
         num_queries: int = 4,
         noise_ratio: float = 0.1,
+        gap_tokens: int = 0,
         seed: Optional[int] = 42
     ):
         """
@@ -43,6 +44,9 @@ class MQARDataset(Dataset):
             num_kv_pairs: Number of key-value pairs to store
             num_queries: Number of queries to test
             noise_ratio: Ratio of noise tokens between kv pairs
+            gap_tokens: Number of filler tokens inserted between KV section and queries.
+                        Set to > local_window (e.g. 150) to force long-range recall.
+                        Models that rely on attention alone fail when gap > local_window.
             seed: Random seed for reproducibility
         """
         self.num_sequences = num_sequences
@@ -51,6 +55,7 @@ class MQARDataset(Dataset):
         self.num_kv_pairs = num_kv_pairs
         self.num_queries = num_queries
         self.noise_ratio = noise_ratio
+        self.gap_tokens = gap_tokens
         
         # Special tokens
         self.PAD_TOKEN = 0
@@ -119,7 +124,15 @@ class MQARDataset(Dataset):
         # Add separator
         sequence.append(self.SEP_TOKEN)
         labels.append(self.SEP_TOKEN)
-        
+
+        # Insert filler gap between KV section and queries (tests long-range recall)
+        # Uses a fixed filler token (FILLER = vocab_size+0, which is actually 1 since
+        # PAD=0 and true tokens start at 1 — use PAD_TOKEN as neutral filler)
+        if self.gap_tokens > 0:
+            filler = [self.PAD_TOKEN] * self.gap_tokens
+            sequence.extend(filler)
+            labels.extend(filler)
+
         # Generate queries
         query_keys = random.sample(list(keys_used), min(self.num_queries, len(keys_used)))
         

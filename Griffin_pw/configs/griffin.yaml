@@ -1,10 +1,10 @@
-# Griffin model configuration
-vocab_size: 32000
-d_model: 512
+# Griffin model configuration (matching RecurrentGemma paper)
+vocab_size: 1000  # Smaller vocab for synthetic tasks
+d_model: 144
 num_layers: 6
-num_heads: 8
+num_heads: 4
 max_seq_len: 2048
-local_window: 256
+local_window: 64  # Smaller window for efficiency
 gate_type: "glu"
 activation: "swish"
 mixing_alpha: 0.5
@@ -21,7 +21,7 @@ optimizer: "adamw"
 scheduler: "cosine"
 
 # Dataset options
-dataset: "MQAR"  # or "Chomsky"
+dataset: "MQAR"  # or "Chomsky" or "Copy"
 sequence_length: 512
 dataset_difficulty: "medium"  # e.g., easy, medium, hard
 
