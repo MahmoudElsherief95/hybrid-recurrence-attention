@@ -1,0 +1,46 @@
+Group,Task,Model,Latency (s/step),Throughput (s/s),Train Time (h),Conv. Steps,CPU Mem Peak (MB),Parameters,Model Size (MB)
+C1 — Recurrence Dominant,MQAR (seq=256),Griffin,3.591,0.882,0.315,315,965.691,2090160,7.973
+C1 — Recurrence Dominant,MQAR (seq=256),Hawk,4.609,0.688,0.404,315,948.531,2061072,7.862
+C1 — Recurrence Dominant,MQAR (seq=256),Local Attention,1.446,2.19,0.127,315,1392.656,2148336,8.195
+C1 — Recurrence Dominant,MQAR (seq=512),Griffin,8.247,1.955,0.142,62,2700.902,2090160,7.973
+C1 — Recurrence Dominant,MQAR (seq=512),Hawk,10.873,1.483,0.187,62,2838.914,2061072,7.862
+C1 — Recurrence Dominant,MQAR (seq=512),Local Attention,3.116,5.171,0.054,62,3405.738,2148336,8.195
+C1 — Recurrence Dominant,MQAR (seq=1024),Griffin,26.323,0.612,0.454,62,4833.938,2090160,7.973
+C1 — Recurrence Dominant,MQAR (seq=1024),Hawk,36.618,0.44,0.631,62,3286.828,2061072,7.862
+C1 — Recurrence Dominant,MQAR (seq=1024),Local Attention,55.745,0.289,0.962,62,3058.98,2148336,8.195
+C1 — Recurrence Dominant,Copy len=256 (seq=512),Griffin,4.427,0.361,0.769,625,1430.32,2089872,7.972
+C1 — Recurrence Dominant,Copy len=256 (seq=512),Hawk,5.917,0.27,1.028,625,1414.246,2060784,7.861
+C1 — Recurrence Dominant,Copy len=256 (seq=512),Local Attention,1.699,0.941,0.295,625,2029.398,2148048,8.194
+C2 — Local Attention Dominant,Path-X (clf),Griffin,3.614,4.378,0.063,63,1321.453,1985618,7.575
+C2 — Local Attention Dominant,Path-X (clf),Hawk,3.72,4.257,0.065,63,838.684,1956530,7.464
+C2 — Local Attention Dominant,Path-X (clf),Local Attention,1.245,12.731,0.022,63,1250.41,2043794,7.796
+C2 — Local Attention Dominant,Chomsky (clf),Griffin,3.281,4.829,0.058,63,963.164,1950914,7.442
+C2 — Local Attention Dominant,Chomsky (clf),Hawk,4.548,3.485,0.08,63,842.211,1921826,7.331
+C2 — Local Attention Dominant,Chomsky (clf),Local Attention,1.435,11.044,0.025,63,1162.633,2009090,7.664
+C2 — Local Attention Dominant,ListOps (clf),Griffin,3.249,0.977,0.284,315,1082.91,1949482,7.437
+C2 — Local Attention Dominant,ListOps (clf),Hawk,4.122,0.77,0.361,315,906.77,1920394,7.326
+C2 — Local Attention Dominant,ListOps (clf),Local Attention,1.338,2.372,0.117,315,1231.133,2007658,7.659
+C2 — Local Attention Dominant,Copy len=100 (seq=256),Griffin,2.051,0.78,0.356,625,584.613,2089872,7.972
+C2 — Local Attention Dominant,Copy len=100 (seq=256),Hawk,2.738,0.584,0.476,625,518.922,2060784,7.861
+C2 — Local Attention Dominant,Copy len=100 (seq=256),Local Attention,0.743,2.15,0.129,625,737.0,2148048,8.194
+Ablation,Induction Heads (seq=256),Griffin,2.915,1.088,0.255,126,1436.914,1952784,7.449
+Ablation,Induction Heads (seq=256),Hawk,3.847,0.825,0.337,252,1390.98,1923696,7.338
+Ablation,Induction Heads (seq=256),Local Attention,1.35,2.349,0.118,189,1407.266,2010960,7.671
+Ablation,Induction Heads (seq=512),Griffin,8.297,1.942,0.143,62,4557.918,1952784,7.449
+Ablation,Induction Heads (seq=512),Hawk,10.534,1.53,0.181,62,4460.23,1923696,7.338
+Ablation,Induction Heads (seq=512),Local Attention,2.986,5.393,0.052,62,4478.73,2010960,7.671
+Ablation,Induction Heads (seq=1024),Griffin,25.669,0.628,0.442,62,5102.809,1952784,7.449
+Ablation,Induction Heads (seq=1024),Hawk,35.549,0.454,0.613,62,2760.91,1923696,7.338
+Ablation,Induction Heads (seq=1024),Local Attention,55.616,0.29,0.959,62,3850.516,2010960,7.671
+Ablation,Selective Copy,Griffin,2.913,1.088,0.255,126,1487.703,1959984,7.477
+Ablation,Selective Copy,Hawk,3.785,0.838,0.331,126,1287.133,1930896,7.366
+Ablation,Selective Copy,Local Attention,1.331,2.38,0.117,126,1463.773,2018160,7.699
+Ablation,Sequential NIAH,Griffin,2.842,1.115,0.249,126,1425.219,1959984,7.477
+Ablation,Sequential NIAH,Hawk,3.795,0.836,0.332,126,1378.617,1930896,7.366
+Ablation,Sequential NIAH,Local Attention,1.285,2.466,0.113,126,1409.469,2018160,7.699
+Ablation,Copy (base),Griffin,2.931,1.081,0.257,315,1402.0,2089872,7.972
+Ablation,Copy (base),Hawk,3.829,0.828,0.335,315,1388.32,2060784,7.861
+Ablation,Copy (base),Local Attention,1.379,2.296,0.121,315,1392.203,2148048,8.194
+Ablation,AAN Long-Range,Griffin,15.744,0.084,0.331,25,1435.5,3710016,14.153
+Ablation,AAN Long-Range,Hawk,12.343,0.107,0.26,25,1263.047,1955232,7.459
+Ablation,AAN Long-Range,Local Attention,1.378,0.96,0.029,25,927.285,1579392,6.025

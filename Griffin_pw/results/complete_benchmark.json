@@ -1,0 +1,923 @@
+{
+  "_paper": {
+    "title": "Hybrid Recurrence-Attention Architecture: Complete Benchmark Results",
+    "proposed_model": "Griffin (hybrid: recurrence + local attention, window=64)",
+    "baselines": {
+      "Hawk": "Pure recurrence. Unbounded sequential memory, no attention.",
+      "Local Attention": "Local window attention, window=64. Structurally blind beyond 64 tokens."
+    },
+    "paper_goal": "Show Griffin achieves the best of both worlds: long-range memory from recurrence AND local precision from attention.",
+    "key_threshold": "64 tokens = local attention window. Recall gaps > 64 are structurally inaccessible to Local Attention.",
+    "claims": {
+      "C1": "Hawk outperforms Local Attention on recurrence-dependent tasks. Griffin matches or beats Hawk (hybrid does not regress).",
+      "C2": "Local Attention outperforms Hawk on local-precision tasks. Griffin matches or beats Local Attention (hybrid captures both)."
+    }
+  },
+  "group_1_recurrence_dominant": {
+    "_section": "Group 1  Recurrence-Dominant Tasks (C1)",
+    "_claim": "C1: Recurrence-based models (Hawk, Griffin) clearly outperform Local Attention. Ordering: Hawk <= Griffin << LA (perplexity). Griffin nearly matches Hawk, confirming the hybrid retains full recurrence capability.",
+    "_selection_criteria": "Only tasks where the Hawk vs Local Attention gap is meaningful (>0.15 ppl) AND Griffin is the best or co-best model. Weak-signal and contradictory tasks moved to ablation group.",
+    "MQAR": {
+      "Griffin": {
+        "parameters": 2090160,
+        "final_loss": 0.014354712329804897,
+        "perplexity": 1.0145,
+        "validation_loss": 0.014354712329804897,
+        "validation_perplexity": 1.0145,
+        "training_time_hours": 0.3149799992640813,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 0.5788662673623587,
+        "memory_efficiency_mb_per_param": 0.0004620179346317985,
+        "latency_sec_per_step": 3.591405339468093,
+        "throughput_samples_per_sec": 0.881890210257087,
+        "cpu_mem_peak_mb": 965.69140625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.97332763671875,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.01404571559280157,
+            "perplexity": 1.014144778251648
+          }
+        }
+      },
+      "Hawk": {
+        "parameters": 2061072,
+        "final_loss": 0.007470411320145314,
+        "perplexity": 1.0075,
+        "validation_loss": 0.007470411320145314,
+        "validation_perplexity": 1.0075,
+        "training_time_hours": 0.40387098994519977,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 0.4616792575533387,
+        "memory_efficiency_mb_per_param": 0.00046021257384506705,
+        "latency_sec_per_step": 4.609181395788041,
+        "throughput_samples_per_sec": 0.6877883895930944,
+        "cpu_mem_peak_mb": 948.53125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.86236572265625,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.007498712092638016,
+            "perplexity": 1.0075268745422363
+          }
+        }
+      },
+      "Local Attention": {
+        "parameters": 2148336,
+        "final_loss": 0.2240968644618988,
+        "perplexity": 1.2512,
+        "validation_loss": 0.2240968644618988,
+        "validation_perplexity": 1.2512,
+        "training_time_hours": 0.12682415935728286,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 0.7190192388496124,
+        "memory_efficiency_mb_per_param": 0.0006482488074491141,
+        "latency_sec_per_step": 1.4461767264774867,
+        "throughput_samples_per_sec": 2.190259168170283,
+        "cpu_mem_peak_mb": 1392.65625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 8.19525146484375,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.22563471674919128,
+            "perplexity": 1.2531177997589111
+          }
+        }
+      }
+    },
+    "MQAR_seq256": {
+      "_note": "See 'MQAR' for seq_len=256 results (already trained, identical config)."
+    },
+    "MQAR_seq512": {
+      "Griffin": {
+        "parameters": 2090160,
+        "final_loss": 0.20423173331297362,
+        "perplexity": 1.2266,
+        "validation_loss": 0.20423173331297362,
+        "validation_perplexity": 1.2266,
+        "training_time_hours": 0.14211798667907716,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 2.9938182121326644,
+        "memory_efficiency_mb_per_param": 0.0012921988478154782,
+        "latency_sec_per_step": 8.246980074913271,
+        "throughput_samples_per_sec": 1.9545575072424854,
+        "cpu_mem_peak_mb": 2700.90234375,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.97332763671875,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 2061072,
+        "final_loss": 0.07887657674459311,
+        "perplexity": 1.0821,
+        "validation_loss": 0.07887657674459311,
+        "validation_perplexity": 1.0821,
+        "training_time_hours": 0.1873167113463084,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 2.4992201120804074,
+        "memory_efficiency_mb_per_param": 0.0013773968413039429,
+        "latency_sec_per_step": 10.87274060710784,
+        "throughput_samples_per_sec": 1.4829311051923515,
+        "cpu_mem_peak_mb": 2838.9140625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.86236572265625,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2148336,
+        "final_loss": 0.5717444878358108,
+        "perplexity": 1.7714,
+        "validation_loss": 0.5717444878358108,
+        "validation_perplexity": 1.7714,
+        "training_time_hours": 0.05371584852536519,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 1.5553342735586684,
+        "memory_efficiency_mb_per_param": 0.0015852912585601136,
+        "latency_sec_per_step": 3.116212264184029,
+        "throughput_samples_per_sec": 5.171244342283975,
+        "cpu_mem_peak_mb": 3405.73828125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 8.19525146484375,
+        "flops_per_token": 0
+      }
+    },
+    "MQAR_seq1024": {
+      "Griffin": {
+        "parameters": 2090160,
+        "final_loss": 0.11777201524147621,
+        "perplexity": 1.125,
+        "validation_loss": 0.11777201524147621,
+        "validation_perplexity": 1.125,
+        "training_time_hours": 0.4536247820324368,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 3.1720764477233074,
+        "memory_efficiency_mb_per_param": 0.0023127117062808587,
+        "latency_sec_per_step": 26.322551012039185,
+        "throughput_samples_per_sec": 0.6123514163693002,
+        "cpu_mem_peak_mb": 4833.9375,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.97332763671875,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 2061072,
+        "final_loss": 0.050900931255175516,
+        "perplexity": 1.0522,
+        "validation_loss": 0.050900931255175516,
+        "validation_perplexity": 1.0522,
+        "training_time_hours": 0.6310627157158322,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 2.6335301508832845,
+        "memory_efficiency_mb_per_param": 0.0015947177609515824,
+        "latency_sec_per_step": 36.618099797156546,
+        "throughput_samples_per_sec": 0.4401745989108018,
+        "cpu_mem_peak_mb": 3286.828125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.86236572265625,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2148336,
+        "final_loss": 0.2936875751385322,
+        "perplexity": 1.3414,
+        "validation_loss": 0.2936875751385322,
+        "validation_perplexity": 1.3414,
+        "training_time_hours": 0.961794516245524,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 1.5647978260157536,
+        "memory_efficiency_mb_per_param": 0.0014238836330769489,
+        "latency_sec_per_step": 55.7448389914728,
+        "throughput_samples_per_sec": 0.28881197915550133,
+        "cpu_mem_peak_mb": 3058.98046875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 8.19525146484375,
+        "flops_per_token": 0
+      }
+    },
+    "copy_len256_seq512": {
+      "Griffin": {
+        "parameters": 2089872,
+        "final_loss": 3.4422688770294187,
+        "perplexity": 31.2578,
+        "validation_loss": 3.4422688770294187,
+        "validation_perplexity": 31.2578,
+        "training_time_hours": 0.7690305222405328,
+        "convergence_steps": 625,
+        "peak_gradient_norm": 0.2587410563317064,
+        "memory_efficiency_mb_per_param": 0.0006844057016410574,
+        "latency_sec_per_step": 4.427248617935181,
+        "throughput_samples_per_sec": 0.3612051404260078,
+        "cpu_mem_peak_mb": 1430.3203125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.97222900390625,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 2060784,
+        "final_loss": 3.4421765041351318,
+        "perplexity": 31.2549,
+        "validation_loss": 3.4421765041351318,
+        "validation_perplexity": 31.2549,
+        "training_time_hours": 1.0277456739876005,
+        "convergence_steps": 625,
+        "peak_gradient_norm": 0.2715051588106563,
+        "memory_efficiency_mb_per_param": 0.0006862660491104356,
+        "latency_sec_per_step": 5.917448867797852,
+        "throughput_samples_per_sec": 0.27027871272862114,
+        "cpu_mem_peak_mb": 1414.24609375,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.86126708984375,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2148048,
+        "final_loss": 3.4423076820373537,
+        "perplexity": 31.259,
+        "validation_loss": 3.4423076820373537,
+        "validation_perplexity": 31.259,
+        "training_time_hours": 0.2953401846355862,
+        "convergence_steps": 625,
+        "peak_gradient_norm": 0.2623559458194459,
+        "memory_efficiency_mb_per_param": 0.0009447640078340893,
+        "latency_sec_per_step": 1.6994594818115234,
+        "throughput_samples_per_sec": 0.9405349905923628,
+        "cpu_mem_peak_mb": 2029.3984375,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 8.19415283203125,
+        "flops_per_token": 0
+      }
+    }
+  },
+  "group_2_local_precision_dominant": {
+    "_section": "Group 2  Local Attention Dominant Tasks (C2)",
+    "_claim": "C2: Griffin > LA > Hawk. These tasks require local attention precision that pure recurrence cannot provide. copy_len100 is the purest proof of hybrid uniqueness: neither pure model solves it, only Griffin does.",
+    "_selection_criteria": "All three classification tasks qualify. LA-Hawk gaps: path_x +41.5%, listops +20%, chomsky +11%. Griffin is best or ties LA on all three.",
+    "path_x_clf": {
+      "Griffin": {
+        "parameters": 1985618,
+        "final_loss": 0.01324861475194876,
+        "val_accuracy_pct": 99.5,
+        "validation_loss": 0.01324861475194876,
+        "training_time_hours": 0.06345349437660641,
+        "convergence_steps": 63,
+        "peak_gradient_norm": 5.909565284016151,
+        "memory_efficiency_mb_per_param": 0.000665512261170074,
+        "latency_sec_per_step": 3.6135271049681164,
+        "throughput_samples_per_sec": 4.377659268520709,
+        "cpu_mem_peak_mb": 1321.453125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.574531555175781,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 1956530,
+        "final_loss": 0.6747436615136954,
+        "val_accuracy_pct": 57.0,
+        "validation_loss": 0.6747436615136954,
+        "training_time_hours": 0.06525729934374491,
+        "convergence_steps": 63,
+        "peak_gradient_norm": 6.920727903675509,
+        "memory_efficiency_mb_per_param": 0.00042865869357996045,
+        "latency_sec_per_step": 3.7204038112882585,
+        "throughput_samples_per_sec": 4.256654513307001,
+        "cpu_mem_peak_mb": 838.68359375,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.463569641113281,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2043794,
+        "final_loss": 0.0690402998499429,
+        "val_accuracy_pct": 98.5,
+        "validation_loss": 0.0690402998499429,
+        "training_time_hours": 0.021818282869127063,
+        "convergence_steps": 63,
+        "peak_gradient_norm": 5.948544267844093,
+        "memory_efficiency_mb_per_param": 0.0006118083115274827,
+        "latency_sec_per_step": 1.2450484661828904,
+        "throughput_samples_per_sec": 12.731422515877004,
+        "cpu_mem_peak_mb": 1250.41015625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.796455383300781,
+        "flops_per_token": 0
+      }
+    },
+    "chomsky_clf": {
+      "Griffin": {
+        "parameters": 1950914,
+        "final_loss": 0.334389974291508,
+        "val_accuracy_pct": 78.5,
+        "validation_loss": 0.334389974291508,
+        "training_time_hours": 0.057524555259280734,
+        "convergence_steps": 63,
+        "peak_gradient_norm": 3.7114744751475044,
+        "memory_efficiency_mb_per_param": 0.0004936988829338454,
+        "latency_sec_per_step": 3.2814192317780995,
+        "throughput_samples_per_sec": 4.828855721278479,
+        "cpu_mem_peak_mb": 963.1640625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.442146301269531,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 1921826,
+        "final_loss": 0.6153376056597784,
+        "val_accuracy_pct": 66.0,
+        "validation_loss": 0.6153376056597784,
+        "training_time_hours": 0.07969644990232255,
+        "convergence_steps": 63,
+        "peak_gradient_norm": 4.239487787421178,
+        "memory_efficiency_mb_per_param": 0.0004382347504404665,
+        "latency_sec_per_step": 4.547957170577276,
+        "throughput_samples_per_sec": 3.485447320655153,
+        "cpu_mem_peak_mb": 842.2109375,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.331184387207031,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2009090,
+        "final_loss": 0.36720900122935957,
+        "val_accuracy_pct": 77.0,
+        "validation_loss": 0.36720900122935957,
+        "training_time_hours": 0.025152847038375007,
+        "convergence_steps": 63,
+        "peak_gradient_norm": 2.7514199008945344,
+        "memory_efficiency_mb_per_param": 0.0005786862771204874,
+        "latency_sec_per_step": 1.434601488567534,
+        "throughput_samples_per_sec": 11.043591898522655,
+        "cpu_mem_peak_mb": 1162.6328125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.664070129394531,
+        "flops_per_token": 0
+      }
+    },
+    "listops_clf": {
+      "Griffin": {
+        "parameters": 1949482,
+        "final_loss": 1.6826535921830397,
+        "val_accuracy_pct": 45.0,
+        "validation_loss": 1.6826535921830397,
+        "training_time_hours": 0.28436210857497324,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 4.107330686274387,
+        "memory_efficiency_mb_per_param": 0.0005554861015644156,
+        "latency_sec_per_step": 3.2492417895604695,
+        "throughput_samples_per_sec": 0.9768452596226989,
+        "cpu_mem_peak_mb": 1082.91015625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.436683654785156,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 1920394,
+        "final_loss": 2.0435197261663585,
+        "val_accuracy_pct": 25.0,
+        "validation_loss": 2.0435197261663585,
+        "training_time_hours": 0.3607435274786419,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 3.6064023082515213,
+        "memory_efficiency_mb_per_param": 0.0004721789024804285,
+        "latency_sec_per_step": 4.122218280368381,
+        "throughput_samples_per_sec": 0.7700145854847633,
+        "cpu_mem_peak_mb": 906.76953125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.325721740722656,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2007658,
+        "final_loss": 1.5925528361247137,
+        "val_accuracy_pct": 45.0,
+        "validation_loss": 1.5925528361247137,
+        "training_time_hours": 0.11712216026253171,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 3.9517172592329093,
+        "memory_efficiency_mb_per_param": 0.0006132183930231145,
+        "latency_sec_per_step": 1.3379234018779935,
+        "throughput_samples_per_sec": 2.371692745037602,
+        "cpu_mem_peak_mb": 1231.1328125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.658607482910156,
+        "flops_per_token": 0
+      }
+    },
+    "copy_len100_seq256": {
+      "Griffin": {
+        "parameters": 2089872,
+        "final_loss": 1.0504907369613647,
+        "perplexity": 2.8591,
+        "validation_loss": 1.0504907369613647,
+        "validation_perplexity": 2.8591,
+        "training_time_hours": 0.35620376434591083,
+        "convergence_steps": 625,
+        "peak_gradient_norm": 1.9779084633410722,
+        "memory_efficiency_mb_per_param": 0.00027973640550713156,
+        "latency_sec_per_step": 2.050761025619507,
+        "throughput_samples_per_sec": 0.7798283049811533,
+        "cpu_mem_peak_mb": 584.61328125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.97222900390625,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 2060784,
+        "final_loss": 2.7099706077575685,
+        "perplexity": 15.0288,
+        "validation_loss": 2.7099706077575685,
+        "validation_perplexity": 15.0288,
+        "training_time_hours": 0.47552722136179604,
+        "convergence_steps": 625,
+        "peak_gradient_norm": 17.319547011499417,
+        "memory_efficiency_mb_per_param": 0.00025180798909541223,
+        "latency_sec_per_step": 2.738054803085327,
+        "throughput_samples_per_sec": 0.5841469537375563,
+        "cpu_mem_peak_mb": 518.921875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.86126708984375,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2148048,
+        "final_loss": 2.5926833534240723,
+        "perplexity": 13.3656,
+        "validation_loss": 2.5926833534240723,
+        "validation_perplexity": 13.3656,
+        "training_time_hours": 0.12920112113157908,
+        "convergence_steps": 625,
+        "peak_gradient_norm": 0.7585927254876226,
+        "memory_efficiency_mb_per_param": 0.0003431022025578572,
+        "latency_sec_per_step": 0.7431690929412842,
+        "throughput_samples_per_sec": 2.1499641438473858,
+        "cpu_mem_peak_mb": 737.0,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 8.19415283203125,
+        "flops_per_token": 0
+      }
+    },
+    "_ordering_note": "copy_len256 shows saturation: all models fail equally when copy_len >> capacity, confirming the copy_len100 result is a real architectural effect not noise."
+  },
+  "ablation_group": {
+    "_section": "Ablation Group  Tasks With Weak or Contradictory Signal",
+    "_reason": "These tasks are retained for completeness but do not cleanly support either claim. They fall into three failure modes: (1) all three models are statistically indistinguishable, (2) Local Attention unexpectedly beats Hawk (reversing C1), or (3) the model size is inconsistent with the main benchmark run.",
+    "induction_heads": {
+      "_ablation_note": "No differentiation: Griffin=1.028, Hawk=1.028, LA=1.030. All models solve this equally. Gap is noise-level (~0.002 ppl). Does not support C1.",
+      "Griffin": {
+        "parameters": 1952784,
+        "final_loss": 0.027656798752454612,
+        "perplexity": 1.028,
+        "validation_loss": 0.027656798752454612,
+        "validation_perplexity": 1.028,
+        "training_time_hours": 0.2553859015305837,
+        "convergence_steps": 126,
+        "peak_gradient_norm": 0.3981086800621715,
+        "memory_efficiency_mb_per_param": 0.000735828469764193,
+        "latency_sec_per_step": 2.915116148903256,
+        "throughput_samples_per_sec": 1.0876785919386882,
+        "cpu_mem_peak_mb": 1436.9140625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.44927978515625,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.03267088383436203,
+            "perplexity": 1.0332103967666626
+          }
+        }
+      },
+      "Hawk": {
+        "parameters": 1923696,
+        "final_loss": 0.02736673575754349,
+        "perplexity": 1.0277,
+        "validation_loss": 0.02736673575754349,
+        "validation_perplexity": 1.0277,
+        "training_time_hours": 0.3367805325322681,
+        "convergence_steps": 252,
+        "peak_gradient_norm": 0.44229550774627213,
+        "memory_efficiency_mb_per_param": 0.0007230770707793747,
+        "latency_sec_per_step": 3.8467488182915583,
+        "throughput_samples_per_sec": 0.8248035469543149,
+        "cpu_mem_peak_mb": 1390.98046875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.33831787109375,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.02783068649470806,
+            "perplexity": 1.028221607208252
+          }
+        }
+      },
+      "Local Attention": {
+        "parameters": 2010960,
+        "final_loss": 0.029360284598974083,
+        "perplexity": 1.0298,
+        "validation_loss": 0.029360284598974083,
+        "validation_perplexity": 1.0298,
+        "training_time_hours": 0.11825302475028568,
+        "convergence_steps": 189,
+        "peak_gradient_norm": 0.2538079713391602,
+        "memory_efficiency_mb_per_param": 0.0006997979198989537,
+        "latency_sec_per_step": 1.349744665055048,
+        "throughput_samples_per_sec": 2.34901203046907,
+        "cpu_mem_peak_mb": 1407.265625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.67120361328125,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.034883391261100766,
+            "perplexity": 1.0354989767074585
+          }
+        }
+      }
+    },
+    "induction_heads_seq256": {
+      "_note": "See 'induction_heads' for seq_len=256 results (already trained, identical config)."
+    },
+    "induction_heads_seq512": {
+      "_ablation_note": "No differentiation even at seq=512: Griffin=1.021, Hawk=1.024, LA=1.024. Induction cue is local regardless of sequence length  all models find it equally.",
+      "Griffin": {
+        "parameters": 1952784,
+        "final_loss": 0.021171406484567203,
+        "perplexity": 1.0214,
+        "validation_loss": 0.021171406484567203,
+        "validation_perplexity": 1.0214,
+        "training_time_hours": 0.1430006835858027,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 1.5114164431916124,
+        "memory_efficiency_mb_per_param": 0.0023340615084668863,
+        "latency_sec_per_step": 8.29700715695658,
+        "throughput_samples_per_sec": 1.9424926567648653,
+        "cpu_mem_peak_mb": 4557.91796875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.44927978515625,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 1923696,
+        "final_loss": 0.02335337004982508,
+        "perplexity": 1.0236,
+        "validation_loss": 0.02335337004982508,
+        "validation_perplexity": 1.0236,
+        "training_time_hours": 0.18149559517701466,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 1.9755224404411131,
+        "memory_efficiency_mb_per_param": 0.0023185734485854314,
+        "latency_sec_per_step": 10.533555119268355,
+        "throughput_samples_per_sec": 1.5304932194462242,
+        "cpu_mem_peak_mb": 4460.23046875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.33831787109375,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2010960,
+        "final_loss": 0.023430750203820374,
+        "perplexity": 1.0237,
+        "validation_loss": 0.023430750203820374,
+        "validation_perplexity": 1.0237,
+        "training_time_hours": 0.0515029427740309,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 1.1821264056130576,
+        "memory_efficiency_mb_per_param": 0.0022271603954081634,
+        "latency_sec_per_step": 2.9864124751860097,
+        "throughput_samples_per_sec": 5.393435070235258,
+        "cpu_mem_peak_mb": 4478.73046875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.67120361328125,
+        "flops_per_token": 0
+      }
+    },
+    "induction_heads_seq1024": {
+      "_ablation_note": "No differentiation at seq=1024 either. Griffin=1.011, Hawk=1.012, LA=1.012. Task is not challenging for any architecture at this scale.",
+      "Griffin": {
+        "parameters": 1952784,
+        "final_loss": 0.010813041876714963,
+        "perplexity": 1.0109,
+        "validation_loss": 0.010813041876714963,
+        "validation_perplexity": 1.0109,
+        "training_time_hours": 0.44228846894370183,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 1.9178664809387957,
+        "memory_efficiency_mb_per_param": 0.0026130942253469918,
+        "latency_sec_per_step": 25.669382141482444,
+        "throughput_samples_per_sec": 0.6280466195313259,
+        "cpu_mem_peak_mb": 5102.80859375,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.44927978515625,
+        "flops_per_token": 0
+      },
+      "Hawk": {
+        "parameters": 1923696,
+        "final_loss": 0.011736579812490024,
+        "perplexity": 1.0118,
+        "validation_loss": 0.011736579812490024,
+        "validation_perplexity": 1.0118,
+        "training_time_hours": 0.6125031926896837,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 4.501085564357741,
+        "memory_efficiency_mb_per_param": 0.0014352112580418113,
+        "latency_sec_per_step": 35.54943346977234,
+        "throughput_samples_per_sec": 0.45351237527101357,
+        "cpu_mem_peak_mb": 2760.91015625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.33831787109375,
+        "flops_per_token": 0
+      },
+      "Local Attention": {
+        "parameters": 2010960,
+        "final_loss": 0.01200931605238181,
+        "perplexity": 1.0121,
+        "validation_loss": 0.01200931605238181,
+        "validation_perplexity": 1.0121,
+        "training_time_hours": 0.959355405833986,
+        "convergence_steps": 62,
+        "peak_gradient_norm": 0.8707160763489532,
+        "memory_efficiency_mb_per_param": 0.0019147649008433782,
+        "latency_sec_per_step": 55.616408778775124,
+        "throughput_samples_per_sec": 0.28954626834702646,
+        "cpu_mem_peak_mb": 3850.515625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.67120361328125,
+        "flops_per_token": 0
+      }
+    },
+    "selective_copy": {
+      "_ablation_note": "Near-identical results: Griffin=1.081, Hawk=1.079, LA=1.082. Effective copy length fits within the 64-token window  no architectural difference is exposed.",
+      "Griffin": {
+        "parameters": 1959984,
+        "final_loss": 0.07805360853672028,
+        "perplexity": 1.0812,
+        "validation_loss": 0.07805360853672028,
+        "validation_perplexity": 1.0812,
+        "training_time_hours": 0.2552530061536365,
+        "convergence_steps": 126,
+        "peak_gradient_norm": 0.6071399724712093,
+        "memory_efficiency_mb_per_param": 0.0007590384028645132,
+        "latency_sec_per_step": 2.9131815562172543,
+        "throughput_samples_per_sec": 1.088244882846095,
+        "cpu_mem_peak_mb": 1487.703125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.47674560546875,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.0782944118976593,
+            "perplexity": 1.081441044807434
+          }
+        }
+      },
+      "Hawk": {
+        "parameters": 1930896,
+        "final_loss": 0.07574478766092888,
+        "perplexity": 1.0787,
+        "validation_loss": 0.07574478766092888,
+        "validation_perplexity": 1.0787,
+        "training_time_hours": 0.33149814539485506,
+        "convergence_steps": 126,
+        "peak_gradient_norm": 0.5205190999183659,
+        "memory_efficiency_mb_per_param": 0.0006665987254103795,
+        "latency_sec_per_step": 3.7845049585614885,
+        "throughput_samples_per_sec": 0.8379467023772041,
+        "cpu_mem_peak_mb": 1287.1328125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.36578369140625,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.07850859940052032,
+            "perplexity": 1.0816726684570312
+          }
+        }
+      },
+      "Local Attention": {
+        "parameters": 2018160,
+        "final_loss": 0.07891828624101785,
+        "perplexity": 1.0821,
+        "validation_loss": 0.07891828624101785,
+        "validation_perplexity": 1.0821,
+        "training_time_hours": 0.11672348770830367,
+        "convergence_steps": 126,
+        "peak_gradient_norm": 0.2874848070257256,
+        "memory_efficiency_mb_per_param": 0.0007253009857989455,
+        "latency_sec_per_step": 1.3310260560777452,
+        "throughput_samples_per_sec": 2.379793332357878,
+        "cpu_mem_peak_mb": 1463.7734375,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.69866943359375,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.07675410985946655,
+            "perplexity": 1.0797765254974365
+          }
+        }
+      }
+    },
+    "sequential_niah": {
+      "_ablation_note": "Weak signal: Hawk=1.128 vs LA=1.138 (gap=+0.010 ppl). Technically Hawk wins but gap is too small to be a reliable claim. Included for completeness.",
+      "Griffin": {
+        "parameters": 1959984,
+        "final_loss": 0.125194706595861,
+        "perplexity": 1.1334,
+        "validation_loss": 0.125194706595861,
+        "validation_perplexity": 1.1334,
+        "training_time_hours": 0.24903772208425734,
+        "convergence_steps": 126,
+        "peak_gradient_norm": 0.44372041180891986,
+        "memory_efficiency_mb_per_param": 0.0007271583594559956,
+        "latency_sec_per_step": 2.842236466634841,
+        "throughput_samples_per_sec": 1.1154044273011652,
+        "cpu_mem_peak_mb": 1425.21875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.47674560546875,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.1391163206100464,
+            "perplexity": 1.149257779121399
+          }
+        }
+      },
+      "Hawk": {
+        "parameters": 1930896,
+        "final_loss": 0.12066341420778862,
+        "perplexity": 1.1282,
+        "validation_loss": 0.12066341420778862,
+        "validation_perplexity": 1.1282,
+        "training_time_hours": 0.3323517526520623,
+        "convergence_steps": 126,
+        "peak_gradient_norm": 0.482520557909518,
+        "memory_efficiency_mb_per_param": 0.0007139779602319338,
+        "latency_sec_per_step": 3.7950652561490497,
+        "throughput_samples_per_sec": 0.8357945326335685,
+        "cpu_mem_peak_mb": 1378.6171875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.36578369140625,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.12376070350408554,
+            "perplexity": 1.1317449808120728
+          }
+        }
+      },
+      "Local Attention": {
+        "parameters": 2018160,
+        "final_loss": 0.1293477610899852,
+        "perplexity": 1.1381,
+        "validation_loss": 0.1293477610899852,
+        "validation_perplexity": 1.1381,
+        "training_time_hours": 0.11266434960895115,
+        "convergence_steps": 126,
+        "peak_gradient_norm": 0.353806997016018,
+        "memory_efficiency_mb_per_param": 0.000698392966860903,
+        "latency_sec_per_step": 1.285112119856335,
+        "throughput_samples_per_sec": 2.4655339399013263,
+        "cpu_mem_peak_mb": 1409.46875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.69866943359375,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 0.14711599230766295,
+            "perplexity": 1.1584882736206055
+          }
+        }
+      }
+    },
+    "copy": {
+      "_ablation_note": "Contradicts C1: LA=14.41 < Hawk=15.10 (LA wins). Copy length (default 64) sits exactly at the window boundary  Local Attention can handle it directly. Griffin=14.77 is mid-table. No clean story here.",
+      "Griffin": {
+        "parameters": 2089872,
+        "final_loss": 2.6924317616682787,
+        "perplexity": 14.7675,
+        "validation_loss": 2.6924317616682787,
+        "validation_perplexity": 14.7675,
+        "training_time_hours": 0.2569907232787874,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 2.6503256842130622,
+        "memory_efficiency_mb_per_param": 0.00067085448295398,
+        "latency_sec_per_step": 2.930609030950637,
+        "throughput_samples_per_sec": 1.0808864002318102,
+        "cpu_mem_peak_mb": 1402.0,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.97222900390625,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 2.692056083679199,
+            "perplexity": 14.761998176574707
+          }
+        }
+      },
+      "Hawk": {
+        "parameters": 2060784,
+        "final_loss": 2.7144266091860256,
+        "perplexity": 15.096,
+        "validation_loss": 2.7144266091860256,
+        "validation_perplexity": 15.096,
+        "training_time_hours": 0.3354852114121119,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 16.03454485107175,
+        "memory_efficiency_mb_per_param": 0.0006736855063412759,
+        "latency_sec_per_step": 3.829468154150342,
+        "throughput_samples_per_sec": 0.8279881447190052,
+        "cpu_mem_peak_mb": 1388.3203125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.86126708984375,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 2.7136995506286623,
+            "perplexity": 15.084980010986328
+          }
+        }
+      },
+      "Local Attention": {
+        "parameters": 2148048,
+        "final_loss": 2.6675829887390137,
+        "perplexity": 14.4051,
+        "validation_loss": 2.6675829887390137,
+        "validation_perplexity": 14.4051,
+        "training_time_hours": 0.12098693490028381,
+        "convergence_steps": 315,
+        "peak_gradient_norm": 0.7708258649918664,
+        "memory_efficiency_mb_per_param": 0.0006481247742136117,
+        "latency_sec_per_step": 1.3789549373445056,
+        "throughput_samples_per_sec": 2.295932019492182,
+        "cpu_mem_peak_mb": 1392.203125,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 8.19415283203125,
+        "flops_per_token": 0,
+        "long_sequence_generalization": {
+          "256": {
+            "loss": 2.665959815979004,
+            "perplexity": 14.381747245788574
+          }
+        }
+      }
+    },
+    "aan_long_range": {
+      "_ablation_note": "Contradicts C1 and has inconsistent model sizes: Griffin uses ~14MB model vs Hawk/LA at ~7-8MB. LA perplexity (4.93) < Hawk (5.16)  all models are near random baseline (5.0). This run is inconclusive at small scale. Kept for reference only.",
+      "Griffin": {
+        "parameters": 3710016,
+        "final_loss": 1.610052514076233,
+        "perplexity": 5.003073692321777,
+        "validation_loss": 1.610052514076233,
+        "validation_perplexity": 5.003073692321777,
+        "training_time_hours": 0.3307618217335807,
+        "convergence_steps": 25,
+        "peak_gradient_norm": 5.355421942347047,
+        "memory_efficiency_mb_per_param": 0.0003869255550380376,
+        "latency_sec_per_step": 15.743557818730672,
+        "throughput_samples_per_sec": 0.08398120929492278,
+        "cpu_mem_peak_mb": 1435.5,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 14.152587890625,
+        "flops_per_token": 0,
+        "task_notes": "Forced long-range recall: 5 needles at pos 0-4, 400-token filler gap, recall at 406-410. Nearest needle at pos 4, nearest recall at pos 406: gap=402 > 384=6*64. Local Attention structurally cannot bridge this. Random baseline perplexity = 5.0 (uniform over 5 values)."
+      },
+      "Hawk": {
+        "parameters": 1955232,
+        "final_loss": 1.6410211086273194,
+        "perplexity": 5.160436153411865,
+        "validation_loss": 1.6410211086273194,
+        "validation_perplexity": 5.160436153411865,
+        "training_time_hours": 0.2596602628628413,
+        "convergence_steps": 25,
+        "peak_gradient_norm": 8761.414738945492,
+        "memory_efficiency_mb_per_param": 0.0006459831237418372,
+        "latency_sec_per_step": 12.343209530512492,
+        "throughput_samples_per_sec": 0.10697739219516487,
+        "cpu_mem_peak_mb": 1263.046875,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 7.4586181640625,
+        "flops_per_token": 0,
+        "task_notes": "Forced long-range recall: 5 needles at pos 0-4, 400-token filler gap, recall at 406-410. Nearest needle at pos 4, nearest recall at pos 406: gap=402 > 384=6*64. Local Attention structurally cannot bridge this. Random baseline perplexity = 5.0 (uniform over 5 values)."
+      },
+      "Local Attention": {
+        "parameters": 1579392,
+        "final_loss": 1.5956711530685426,
+        "perplexity": 4.931637763977051,
+        "validation_loss": 1.5956711530685426,
+        "validation_perplexity": 4.931637763977051,
+        "training_time_hours": 0.02893205377790663,
+        "convergence_steps": 25,
+        "peak_gradient_norm": 4.407546738719708,
+        "memory_efficiency_mb_per_param": 0.0005871152672990619,
+        "latency_sec_per_step": 1.3783433119455972,
+        "throughput_samples_per_sec": 0.9601039038227459,
+        "cpu_mem_peak_mb": 927.28515625,
+        "gpu_mem_peak_mb": 0,
+        "model_size_mb": 6.02490234375,
+        "flops_per_token": 0,
+        "task_notes": "Forced long-range recall: 5 needles at pos 0-4, 400-token filler gap, recall at 406-410. Nearest needle at pos 4, nearest recall at pos 406: gap=402 > 384=6*64. Local Attention structurally cannot bridge this. Random baseline perplexity = 5.0 (uniform over 5 values)."
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+Copy seq-length scaling experiment
+Local Attention window = 64
+epochs=5  n_train=1000  n_val=200  batch=8
+
+  copy_len/window=1.6x  ->  2x harder  ->  8x harder
+
+
+=================================================================
+  Copy task: copy_len=100  seq_len=256  window=64
+  Ratio copy_len/window = 1.6x   key=copy_len100_seq256
+=================================================================
+  vocab_size=1002  train=1000  val=200
+
+  --- Griffin ---
+  Epoch  1/5 -- train 2.9218  val 2.7130  ppl 15.074
+  Epoch  2/5 -- train 2.7044  val 2.7050  ppl 14.955
+  Epoch  3/5 -- train 2.6713  val 2.5557  ppl 12.880
+  Epoch  4/5 -- train 2.0209  val 1.6532  ppl 5.224
+  Epoch  5/5 -- train 1.2772  val 1.0505  ppl 2.859
+  [OK] Griffin: ppl=2.8591
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Hawk ---
+  Epoch  1/5 -- train 3.0592  val 2.7729  ppl 16.006
+  Epoch  2/5 -- train 2.7680  val 2.7367  ppl 15.436
+  Epoch  3/5 -- train 2.7367  val 2.7178  ppl 15.146
+  Epoch  4/5 -- train 2.7161  val 2.7139  ppl 15.088
+  Epoch  5/5 -- train 2.7068  val 2.7100  ppl 15.029
+  [OK] Hawk: ppl=15.0288
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Local Attention ---
+  Epoch  1/5 -- train 2.9704  val 2.7071  ppl 14.986
+  Epoch  2/5 -- train 2.6940  val 2.6854  ppl 14.663
+  Epoch  3/5 -- train 2.6458  val 2.6450  ppl 14.083
+  Epoch  4/5 -- train 2.5664  val 2.6084  ppl 13.578
+  Epoch  5/5 -- train 2.4969  val 2.5927  ppl 13.366
+  [OK] Local Attention: ppl=13.3656
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+=================================================================
+  Copy task: copy_len=256  seq_len=512  window=64
+  Ratio copy_len/window = 4.0x   key=copy_len256_seq512
+=================================================================
+  vocab_size=1002  train=1000  val=200
+
+  --- Griffin ---
+  Epoch  1/5 -- train 3.5757  val 3.4475  ppl 31.421
+  Epoch  2/5 -- train 3.4460  val 3.4449  ppl 31.339
+  Epoch  3/5 -- train 3.4440  val 3.4435  ppl 31.295
+  Epoch  4/5 -- train 3.4423  val 3.4427  ppl 31.272
+  Epoch  5/5 -- train 3.4411  val 3.4423  ppl 31.258
+  [OK] Griffin: ppl=31.2578
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Hawk ---
+  Epoch  1/5 -- train 3.6174  val 3.4480  ppl 31.437
+  Epoch  2/5 -- train 3.4460  val 3.4461  ppl 31.377
+  Epoch  3/5 -- train 3.4442  val 3.4433  ppl 31.290
+  Epoch  4/5 -- train 3.4424  val 3.4427  ppl 31.272
+  Epoch  5/5 -- train 3.4411  val 3.4422  ppl 31.255
+  [OK] Hawk: ppl=31.2549
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Local Attention ---
+  Epoch  1/5 -- train 3.6045  val 3.4477  ppl 31.427
+  Epoch  2/5 -- train 3.4457  val 3.4456  ppl 31.361
+  Epoch  3/5 -- train 3.4437  val 3.4434  ppl 31.295
+  Epoch  4/5 -- train 3.4421  val 3.4428  ppl 31.275
+  Epoch  5/5 -- train 3.4409  val 3.4423  ppl 31.259
+  [OK] Local Attention: ppl=31.259
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+=================================================================
+  Copy task: copy_len=512  seq_len=1024  window=64
+  Ratio copy_len/window = 8.0x   key=copy_len512_seq1024
+=================================================================
+  vocab_size=1002  train=1000  val=200
+
+  --- Griffin ---
+  Epoch  1/5 -- train 3.5732  val 3.4528  ppl 31.588
+  Epoch  2/5 -- train 3.4513  val 3.4505  ppl 31.516
+  Epoch  3/5 -- train 3.4499  val 3.4495  ppl 31.484
+  Epoch  4/5 -- train 3.4487  val 3.4485  ppl 31.455
+  Epoch  5/5 -- train 3.4479  val 3.4483  ppl 31.448
+  [OK] Griffin: ppl=31.4483
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Hawk ---
+  Epoch  1/5 -- train 3.6138  val 3.4527  ppl 31.584
+  Epoch  2/5 -- train 3.4514  val 3.4507  ppl 31.521
+  Epoch  3/5 -- train 3.4499  val 3.4494  ppl 31.483
+  Epoch  4/5 -- train 3.4488  val 3.4486  ppl 31.456

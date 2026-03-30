@@ -1,0 +1,178 @@
+Running 5 benchmarks on device=cpu
+epochs=5  n_train=1000  n_val=200  lr=0.0003  clip=1.0
+
+============================================================
+  BENCHMARK: MQAR  (dataset=mqar)
+============================================================
+  Building datasets ...
+  vocab_size=1004  train=1000  val=200
+
+  --- Griffin ---
+  Epoch  1/5 -- train 0.6726  val 0.1134  ppl 1.120
+  Epoch  2/5 -- train 0.0588  val 0.0300  ppl 1.031
+  Epoch  3/5 -- train 0.0240  val 0.0190  ppl 1.019
+  Epoch  4/5 -- train 0.0173  val 0.0156  ppl 1.016
+  Epoch  5/5 -- train 0.0150  val 0.0144  ppl 1.014
+  [OK] Griffin: ppl=1.0145
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Hawk ---
+  Epoch  1/5 -- train 0.4588  val 0.0345  ppl 1.035
+  Epoch  2/5 -- train 0.0206  val 0.0133  ppl 1.013
+  Epoch  3/5 -- train 0.0112  val 0.0094  ppl 1.009
+  Epoch  4/5 -- train 0.0087  val 0.0080  ppl 1.008
+  Epoch  5/5 -- train 0.0078  val 0.0075  ppl 1.007
+  [OK] Hawk: ppl=1.0075
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Local Attention ---
+  Epoch  1/5 -- train 1.4002  val 0.9986  ppl 2.714
+  Epoch  2/5 -- train 0.8687  val 0.6546  ppl 1.924
+  Epoch  3/5 -- train 0.5264  val 0.3854  ppl 1.470
+  Epoch  4/5 -- train 0.3255  val 0.2669  ppl 1.306
+  Epoch  5/5 -- train 0.2469  val 0.2241  ppl 1.251
+  [OK] Local Attention: ppl=1.2512
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+============================================================
+  BENCHMARK: induction_heads  (dataset=induction_heads)
+============================================================
+  Building datasets ...
+  vocab_size=50  train=1000  val=200
+
+  --- Griffin ---
+  Epoch  1/5 -- train 0.1210  val 0.0293  ppl 1.030
+  Epoch  2/5 -- train 0.0289  val 0.0277  ppl 1.028
+  Epoch  3/5 -- train 0.0256  val 0.0277  ppl 1.028
+  Epoch  4/5 -- train 0.0237  val 0.0285  ppl 1.029
+  Epoch  5/5 -- train 0.0224  val 0.0287  ppl 1.029
+  [OK] Griffin: ppl=1.028
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Hawk ---
+  Epoch  1/5 -- train 0.1164  val 0.0358  ppl 1.036
+  Epoch  2/5 -- train 0.0307  val 0.0276  ppl 1.028
+  Epoch  3/5 -- train 0.0272  val 0.0278  ppl 1.028
+  Epoch  4/5 -- train 0.0260  val 0.0274  ppl 1.028
+  Epoch  5/5 -- train 0.0254  val 0.0277  ppl 1.028
+  [OK] Hawk: ppl=1.0277
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Local Attention ---
+  Epoch  1/5 -- train 0.1423  val 0.0366  ppl 1.037
+  Epoch  2/5 -- train 0.0331  val 0.0305  ppl 1.031
+  Epoch  3/5 -- train 0.0284  val 0.0294  ppl 1.030
+  Epoch  4/5 -- train 0.0258  val 0.0298  ppl 1.030
+  Epoch  5/5 -- train 0.0246  val 0.0297  ppl 1.030
+  [OK] Local Attention: ppl=1.0298
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+============================================================
+  BENCHMARK: copy  (dataset=copy)
+============================================================
+  Building datasets ...
+  vocab_size=1002  train=1000  val=200
+
+  --- Griffin ---
+  Epoch  1/5 -- train 3.0501  val 2.7514  ppl 15.664
+  Epoch  2/5 -- train 2.7222  val 2.7029  ppl 14.924
+  Epoch  3/5 -- train 2.7033  val 2.6974  ppl 14.840
+  Epoch  4/5 -- train 2.6985  val 2.6940  ppl 14.791
+  Epoch  5/5 -- train 2.6947  val 2.6924  ppl 14.768
+  [OK] Griffin: ppl=14.7675
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Hawk ---
+  Epoch  1/5 -- train 3.2466  val 2.7840  ppl 16.183
+  Epoch  2/5 -- train 2.7675  val 2.7414  ppl 15.508
+  Epoch  3/5 -- train 2.7422  val 2.7773  ppl 16.076
+  Epoch  4/5 -- train 2.7304  val 2.7221  ppl 15.213
+  Epoch  5/5 -- train 2.7206  val 2.7144  ppl 15.096
+  [OK] Hawk: ppl=15.096
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Local Attention ---
+  Epoch  1/5 -- train 3.1825  val 2.7299  ppl 15.332
+  Epoch  2/5 -- train 2.7139  val 2.7022  ppl 14.912
+  Epoch  3/5 -- train 2.6998  val 2.6917  ppl 14.756
+  Epoch  4/5 -- train 2.6885  val 2.6778  ppl 14.553
+  Epoch  5/5 -- train 2.6753  val 2.6676  ppl 14.405
+  [OK] Local Attention: ppl=14.4051
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+============================================================
+  BENCHMARK: selective_copy  (dataset=selective_copy)
+============================================================
+  Building datasets ...
+  vocab_size=100  train=1000  val=200
+
+  --- Griffin ---
+  Epoch  1/5 -- train 0.1615  val 0.0805  ppl 1.084
+  Epoch  2/5 -- train 0.0691  val 0.0781  ppl 1.081
+  Epoch  3/5 -- train 0.0600  val 0.0788  ppl 1.082
+  Epoch  4/5 -- train 0.0526  val 0.0795  ppl 1.083
+  Epoch  5/5 -- train 0.0478  val 0.0801  ppl 1.083
+  [OK] Griffin: ppl=1.0812
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Hawk ---
+  Epoch  1/5 -- train 0.2033  val 0.0807  ppl 1.084
+  Epoch  2/5 -- train 0.0719  val 0.0757  ppl 1.079
+  Epoch  3/5 -- train 0.0660  val 0.0758  ppl 1.079
+  Epoch  4/5 -- train 0.0627  val 0.0760  ppl 1.079
+  Epoch  5/5 -- train 0.0604  val 0.0762  ppl 1.079
+  [OK] Hawk: ppl=1.0787
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Local Attention ---
+  Epoch  1/5 -- train 0.2029  val 0.0828  ppl 1.086
+  Epoch  2/5 -- train 0.0735  val 0.0789  ppl 1.082
+  Epoch  3/5 -- train 0.0668  val 0.0791  ppl 1.082
+  Epoch  4/5 -- train 0.0617  val 0.0797  ppl 1.083
+  Epoch  5/5 -- train 0.0587  val 0.0803  ppl 1.084
+  [OK] Local Attention: ppl=1.0821
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+============================================================
+  BENCHMARK: sequential_niah  (dataset=sequential_niah)
+============================================================
+  Building datasets ...
+  vocab_size=100  train=1000  val=200
+
+  --- Griffin ---
+  Epoch  1/5 -- train 0.2702  val 0.1308  ppl 1.140
+  Epoch  2/5 -- train 0.1175  val 0.1252  ppl 1.133
+  Epoch  3/5 -- train 0.1065  val 0.1272  ppl 1.136
+  Epoch  4/5 -- train 0.0966  val 0.1288  ppl 1.137
+  Epoch  5/5 -- train 0.0891  val 0.1306  ppl 1.140
+  [OK] Griffin: ppl=1.1334
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Hawk ---
+  Epoch  1/5 -- train 0.3470  val 0.1338  ppl 1.143
+  Epoch  2/5 -- train 0.1194  val 0.1207  ppl 1.128
+  Epoch  3/5 -- train 0.1144  val 0.1208  ppl 1.128
+  Epoch  4/5 -- train 0.1113  val 0.1219  ppl 1.130
+  Epoch  5/5 -- train 0.1086  val 0.1224  ppl 1.130
+  [OK] Hawk: ppl=1.1282
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+  --- Local Attention ---
+  Epoch  1/5 -- train 0.2795  val 0.1392  ppl 1.149
+  Epoch  2/5 -- train 0.1268  val 0.1293  ppl 1.138
+  Epoch  3/5 -- train 0.1141  val 0.1311  ppl 1.140
+  Epoch  4/5 -- train 0.1060  val 0.1315  ppl 1.141
+  Epoch  5/5 -- train 0.1007  val 0.1331  ppl 1.142
+  [OK] Local Attention: ppl=1.1381
+  [SAVED] -> C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\results\complete_benchmark.json
+
+=== ALL BENCHMARKS DONE ===
+
+Summary (validation perplexity):
+Dataset                   Griffin       Hawk         LA
+------------------------------------------------------
+  MQAR                      1.014      1.008      1.251
+  induction_heads           1.028      1.028      1.030
+  copy                     14.768     15.096     14.405
+  selective_copy            1.081      1.079      1.082
+  sequential_niah           1.133      1.128      1.138

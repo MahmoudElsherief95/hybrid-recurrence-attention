@@ -1,0 +1,16 @@
+Group,Task,Metric,Griffin,Hawk,Local Attention,Best Model,Worst Model,Griffin–Hawk Δ
+Ablation,AAN Long-Range,Perplexity,5.003,5.16,4.932,Local Attention,Hawk,-0.157
+Ablation,Copy (base),Perplexity,14.768,15.096,14.405,Local Attention,Hawk,-0.328
+Ablation,Induction Heads (seq=1024),Perplexity,1.011,1.012,1.012,Griffin,Hawk,-0.001
+Ablation,Induction Heads (seq=256),Perplexity,1.028,1.028,1.03,Griffin,Local Attention,0.0
+Ablation,Induction Heads (seq=512),Perplexity,1.021,1.024,1.024,Griffin,Hawk,-0.003
+Ablation,Selective Copy,Perplexity,1.081,1.079,1.082,Hawk,Local Attention,0.002
+Ablation,Sequential NIAH,Perplexity,1.133,1.128,1.138,Hawk,Local Attention,0.005
+C1 — Recurrence Dominant,Copy len=256 (seq=512),Perplexity,31.258,31.255,31.259,Hawk,Local Attention,0.003
+C1 — Recurrence Dominant,MQAR (seq=1024),Perplexity,1.125,1.052,1.341,Hawk,Local Attention,0.073
+C1 — Recurrence Dominant,MQAR (seq=256),Perplexity,1.014,1.008,1.251,Hawk,Local Attention,0.006
+C1 — Recurrence Dominant,MQAR (seq=512),Perplexity,1.227,1.082,1.771,Hawk,Local Attention,0.145
+C2 — Local Attention Dominant,Chomsky (clf),Accuracy (%),78.5,66.0,77.0,Griffin,Hawk,12.5
+C2 — Local Attention Dominant,Copy len=100 (seq=256),Perplexity,2.859,15.029,13.366,Griffin,Hawk,-12.17
+C2 — Local Attention Dominant,ListOps (clf),Accuracy (%),45.0,25.0,45.0,Griffin,Hawk,20.0
+C2 — Local Attention Dominant,Path-X (clf),Accuracy (%),99.5,57.0,98.5,Griffin,Hawk,42.5
