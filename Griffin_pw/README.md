@@ -10,9 +10,9 @@ All three models are matched at approximately 2M parameters for a fair architect
 
 | Model | Type | Memory Mechanism | d_model | Layers | Local Window |
 |---|---|---|---|---|---|
-| **Griffin** | Hybrid | Recurrent state + local attention | 144 | 6 | 64 tokens |
-| **Hawk** | Pure recurrence | Recurrent hidden state only | 144 | 6 | N/A |
-| **Local Attention** | Pure attention | Local attention window only | 144 | 6 | 64 tokens |
+| Griffin | Hybrid | Recurrent state + local attention | 144 | 6 | 64 tokens |
+| Hawk | Pure recurrence | Recurrent hidden state only | 144 | 6 | N/A |
+| Local Attention | Pure attention | Local attention window only | 144 | 6 | 64 tokens |
 
 ---
 
@@ -20,8 +20,8 @@ All three models are matched at approximately 2M parameters for a fair architect
 
 Benchmarks are split into two groups based on what the task structurally demands:
 
-- **C1 — Recurrence Dominant:** Tasks where relevant context lies beyond the 64-token window. Recurrent models (Griffin, Hawk) should dominate; Local Attention should degrade as sequence length grows.
-- **C2 — Local Attention Dominant:** Tasks requiring both local precision and broader reach. Griffin's hybrid design should outperform both pure baselines.
+- C1 — Recurrence Dominant: Tasks where relevant context lies beyond the 64-token window. Recurrent models (Griffin, Hawk) should dominate; Local Attention should degrade as sequence length grows.
+- C2 — Local Attention Dominant: Tasks requiring both local precision and broader reach. Griffin's hybrid design should outperform both pure baselines.
 
 ---
 
@@ -211,24 +211,24 @@ For a full analysis with tables and figures, open `notebooks/model_analysis.ipyn
 
 ### Key findings
 
-**C1 — Recurrence Dominant (MQAR):**
+C1 : Recurrence Dominant (MQAR):
 
 | Task | Griffin | Hawk | Local Attention |
 |---|---|---|---|
-| MQAR (seq=256) | 1.014 | **1.007** | 1.251 |
-| MQAR (seq=512) | 1.227 | **1.082** | 1.771 |
-| MQAR (seq=1024) | 1.125 | **1.052** | 1.341 |
+| MQAR (seq=256) | 1.014 | 1.007 | 1.251 |
+| MQAR (seq=512) | 1.227 | 1.082 | 1.771 |
+| MQAR (seq=1024) | 1.125 | 1.052 | 1.341 |
 
 Griffin stays within 0.15 PPL of Hawk across all sequence lengths — the hybrid does not regress on recurrence quality.
 
-**C2 — Local Attention Dominant:**
+C2 : Local Attention Dominant:
 
 | Task | Griffin | Hawk | Local Attention |
 |---|---|---|---|
-| copy_len100 (PPL) | **2.86** | 15.03 | 13.37 |
-| Path-X (Acc %) | **99.5** | 57.0 | 98.5 |
-| Chomsky (Acc %) | **78.5** | 66.0 | 77.0 |
-| ListOps (Acc %) | **45.0** | 25.0 | 45.0 |
+| copy_len100 (PPL) | 2.86 | 15.03 | 13.37 |
+| Path-X (Acc %) | 99.5 | 57.0 | 98.5 |
+| Chomsky (Acc %) | 78.5 | 66.0 | 77.0 |
+| ListOps (Acc %) | 45.0 | 25.0 | 45.0 |
 
 Griffin uniquely solves `copy_len100` (copy span > local window), achieving 5× lower perplexity than either pure model.
 
@@ -254,6 +254,8 @@ All benchmarks use the following shared hyperparameters:
 
 ---
 
-## Reference
+## References
 
 De et al. (2024). *Griffin: Mixing Gated Linear Recurrences with Local Attention for Efficient Language Models.* arXiv:2402.19427
+
+Botev et al. (2024). *RecurrentGemma: Moving Past Transformers for Efficient Open Language Models.* arXiv:2404.07839
