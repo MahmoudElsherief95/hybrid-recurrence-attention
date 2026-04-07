@@ -96,48 +96,85 @@ class ParenthesesDataset(ChomskyDataset):
         super().__init__(num_sequences, max_length, **kwargs)
 
     def _generate_balanced_sequence(self, length: int) -> str:
-        """Generate a deeply nested balanced parentheses sequence."""
-        if length == 0 or length % 2 != 0:
+        """Generate a balanced parentheses sequence (Dyck-like word).
+
+        This must be *guaranteed balanced*; otherwise labels become noisy.
+        """
+        if length <= 0 or length % 2 != 0:
             return ""
-        max_nesting = max(1, length // 2)
-        min_nesting = min(self.min_nesting, max_nesting)
-        if min_nesting > max_nesting:
-            min_nesting = max_nesting
-        nesting = random.randint(min_nesting, max_nesting)
+
         paren_type = random.choice(self.paren_types)
         open_paren, close_paren = paren_type[0], paren_type[1]
-        sequence = [open_paren] * nesting + [close_paren] * nesting
-        remaining = length - 2 * nesting
-        # Add random pairs and single parentheses to increase difficulty
-        for _ in range(remaining // 2):
-            if random.random() < 0.5:
-                sequence.insert(nesting, open_paren)
-                sequence.insert(nesting + 1, close_paren)
+
+        n_pairs = length // 2
+        opens_left = n_pairs
+        closes_left = n_pairs
+        balance = 0
+        out = []
+
+        # Random walk that never lets closes exceed opens.
+        while opens_left > 0 or closes_left > 0:
+            if opens_left == 0:
+                out.append(close_paren)
+                closes_left -= 1
+                balance -= 1
+                continue
+            if closes_left == 0:
+                out.append(open_paren)
+                opens_left -= 1
+                balance += 1
+                continue
+
+            # If balance is 0 we must open.
+            if balance == 0:
+                choose_open = True
             else:
-                sequence.insert(nesting, random.choice([open_paren, close_paren]))
-        # Add random single parentheses to remaining positions
-        for _ in range(remaining % 2):
-            sequence.insert(nesting, random.choice([open_paren, close_paren]))
-        return ''.join(sequence)
+                # Bias towards opening early to encourage deeper nesting.
+                choose_open = random.random() < 0.6
+
+            if choose_open:
+                out.append(open_paren)
+                opens_left -= 1
+                balance += 1
+            else:
+                out.append(close_paren)
+                closes_left -= 1
+                balance -= 1
+
+        return "".join(out)
 
     def _generate_unbalanced_sequence(self, length: int) -> str:
-        """Generate a highly non-trivial unbalanced parentheses sequence."""
-        # Start with a deeply nested balanced sequence
+        """Generate a non-trivial unbalanced parentheses sequence.
+
+        Important: keep the *same length* as the balanced samples.
+        Otherwise models can exploit padding/length as a shortcut signal.
+        """
         seq_str = self._generate_balanced_sequence(length)
+        if not seq_str:
+            return ""
+
         seq_list = list(seq_str)
-        # Introduce many errors: remove, swap, or insert wrong parentheses
-        num_errors = random.randint(max(8, length // 32), max(16, length // 16))
+
+        # Introduce errors via substitutions only (length-preserving).
+        # Use enough edits to make negatives non-trivial, but bounded.
+        num_errors = random.randint(max(4, length // 32), max(8, length // 16))
+        bracket_vocab = ['(', ')', '[', ']', '{', '}']
+
         for _ in range(num_errors):
-            if len(seq_list) > 0:
-                idx = random.randint(0, len(seq_list) - 1)
-                action = random.choice(['remove', 'swap', 'insert'])
-                if action == 'remove':
-                    seq_list.pop(idx)
-                elif action == 'swap':
-                    seq_list[idx] = random.choice(['(', ')', '[', ']', '{', '}'])
-                elif action == 'insert':
-                    seq_list.insert(idx, random.choice(['(', ')', '[', ']', '{', '}']))
-        return ''.join(seq_list)
+            idx = random.randint(0, len(seq_list) - 1)
+            old = seq_list[idx]
+            # Replace with a different bracket token.
+            choices = [c for c in bracket_vocab if c != old]
+            seq_list[idx] = random.choice(choices)
+
+        out = ''.join(seq_list)
+
+        # Ensure it is actually unbalanced; if it accidentally stayed balanced,
+        # force a guaranteed mismatch by flipping the first char.
+        if self._is_balanced(out):
+            seq_list[0] = ')' if seq_list[0] != ')' else '('
+            out = ''.join(seq_list)
+        return out
 
     def _is_balanced(self, sequence: str) -> bool:
         """Check if a parentheses sequence is balanced."""
@@ -159,7 +196,12 @@ class ParenthesesDataset(ChomskyDataset):
         """Generate dataset of balanced and unbalanced parentheses."""
         for _ in range(self.num_sequences):
             # Generate sequence length
-            seq_len = random.randint(4, min(self.max_length - 2, 32))  # Leave room for special tokens
+            # Use a much wider range so the task isn't trivially short.
+            # Keep it even so balanced samples are possible.
+            max_len = max(8, self.max_length - 2)
+            seq_len = random.randint(8, max_len)
+            if seq_len % 2 == 1:
+                seq_len -= 1
             
             # 50% balanced, 50% unbalanced
             if random.random() < 0.5:

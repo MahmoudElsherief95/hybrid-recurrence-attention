@@ -15,6 +15,7 @@ import math
 from typing import Dict, Any, Optional, Tuple, List
 from tqdm import tqdm
 import logging
+import psutil
 
 
 class BaseTrainer:
@@ -157,8 +158,8 @@ class BaseTrainer:
                     total_loss = 0.0
                     total_tokens = 0
                     start_time = time.time()
-                    cpu_mem_start = torch.cuda.memory_allocated() if torch.cuda.is_available() else 0
-                    gpu_mem_start = torch.cuda.memory_allocated() if torch.cuda.is_available() else 0
+                    process = psutil.Process()
+                    cpu_mem_peak_bytes = 0
                     progress_bar = tqdm(
                         self.train_dataloader,
                         desc=f"Epoch {self.current_epoch + 1}",
@@ -206,8 +207,16 @@ class BaseTrainer:
                         # Update statistics
                         batch_size = input_ids.shape[0]
                         seq_len = input_ids.shape[1]
-                        total_loss += loss.item() * batch_size
-                        total_tokens += batch_size * seq_len
+                        if attention_mask is not None:
+                            tokens_in_batch = float(attention_mask.sum().item())
+                        else:
+                            tokens_in_batch = float(batch_size * seq_len)
+
+                        # loss is already averaged over tokens (see _compute_loss), so recover NLL by multiplying.
+                        total_loss += loss.item() * tokens_in_batch
+                        total_tokens += tokens_in_batch
+
+                        cpu_mem_peak_bytes = max(cpu_mem_peak_bytes, process.memory_info().rss)
                         # Update progress bar
                         progress_bar.set_postfix({
                             'loss': f"{loss.item():.4f}",
@@ -226,9 +235,8 @@ class BaseTrainer:
                             val_metrics = self.validate()
                             self._log_metrics(val_metrics, 'Val')
                             self.model.train()  # Return to training mode
-                    avg_loss = total_loss / len(self.train_dataloader.dataset)
+                    avg_loss = (total_loss / total_tokens) if total_tokens else float('nan')
                     end_time = time.time()
-                    cpu_mem_peak = torch.cuda.memory_allocated() if torch.cuda.is_available() else 0
                     gpu_mem_peak = torch.cuda.max_memory_allocated() if torch.cuda.is_available() else 0
                     latency_sec_per_step = (end_time - start_time) / len(self.train_dataloader)
                     throughput_samples_per_sec = len(self.train_dataloader.dataset) / (end_time - start_time)
@@ -237,7 +245,7 @@ class BaseTrainer:
                         'perplexity': math.exp(min(avg_loss, 10)),
                         'latency_sec_per_step': latency_sec_per_step,
                         'throughput_samples_per_sec': throughput_samples_per_sec,
-                        'cpu_mem_peak_mb': cpu_mem_peak / (1024 * 1024),
+                        'cpu_mem_peak_mb': cpu_mem_peak_bytes / (1024 * 1024),
                         'gpu_mem_peak_mb': gpu_mem_peak / (1024 * 1024)
                     }
         avg_loss = total_loss / len(self.val_dataloader.dataset)

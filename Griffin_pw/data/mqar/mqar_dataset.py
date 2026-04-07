@@ -1,15 +1,29 @@
-"""
-Multi-Query Associative Recall (MQAR) Dataset Implementation
-Dataset for testing associative memory capabilities of sequence models
+"""Multi-Query Associative Recall (MQAR) dataset.
+
+This implementation is adapted to match the common MQAR benchmark semantics
+used in Zoology (HazyResearch):
+
+- LM-style alignment: the model predicts a value token immediately after a
+    query key appears.
+- Answer-only supervision: labels are `IGNORE_INDEX` everywhere except at the
+    positions where the value should be predicted.
+- Long-range gaps: query positions are sampled from a power-law-like gap
+    distribution.
+- No padding shortcut: by default, non-query placeholders are replaced with
+    random tokens so there is no large constant PAD region.
+
+The dataset returns tensors shaped `[seq_len]` for both `input_ids` and
+`labels`, with labels using the standard `ignore_index=-100` convention.
 """
 
-import torch
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-import numpy as np
-import random
-from typing import List, Tuple, Dict, Optional
+from __future__ import annotations
+
 import math
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader, Dataset
 
 
 class MQARDataset(Dataset):
@@ -28,11 +42,11 @@ class MQARDataset(Dataset):
         num_sequences: int = 10000,
         seq_len: int = 512,
         vocab_size: int = 1000,
-        num_kv_pairs: int = 16,
-        num_queries: int = 4,
-        noise_ratio: float = 0.1,
-        gap_tokens: int = 0,
-        seed: Optional[int] = 42
+        num_kv_pairs: int = 8,
+        num_passes: int = 1,
+        power_a: float = 0.01,
+        random_non_queries: bool = True,
+        seed: Optional[int] = None,
     ):
         """
         Initialize MQAR dataset.
@@ -49,115 +63,115 @@ class MQARDataset(Dataset):
                         Models that rely on attention alone fail when gap > local_window.
             seed: Random seed for reproducibility
         """
-        self.num_sequences = num_sequences
-        self.seq_len = seq_len
-        self.vocab_size = vocab_size
-        self.num_kv_pairs = num_kv_pairs
-        self.num_queries = num_queries
-        self.noise_ratio = noise_ratio
-        self.gap_tokens = gap_tokens
-        
-        # Special tokens
+        self.num_sequences = int(num_sequences)
+        self.seq_len = int(seq_len)
+        self.vocab_size = int(vocab_size)
+        self.num_kv_pairs = int(num_kv_pairs)
+        self.num_passes = int(num_passes)
+        self.power_a = float(power_a)
+        self.random_non_queries = bool(random_non_queries)
+
+        # Standard tokens
         self.PAD_TOKEN = 0
-        self.SEP_TOKEN = vocab_size + 1  # Separator between kv pairs and queries
-        self.QUERY_TOKEN = vocab_size + 2  # Query marker
-        self.ANSWER_TOKEN = vocab_size + 3  # Answer marker
-        self.total_vocab_size = vocab_size + 4
-        
-        # Set random seed
-        if seed is not None:
-            random.seed(seed)
-            np.random.seed(seed)
-            torch.manual_seed(seed)
+        self.IGNORE_INDEX = -100
+
+        # Ensure vocabulary is large enough for disjoint key/value pools.
+        if self.vocab_size <= self.seq_len:
+            self.vocab_size = int(self.seq_len * 2 + 1)
+        self.total_vocab_size = int(self.vocab_size)
+
+        # RNG
+        # Do NOT reset global RNGs to a constant seed by default; that can make
+        # train/val identical when wrappers construct two datasets back-to-back.
+        # Instead, keep a per-dataset Generator for reproducible generation.
+        self._seed = None if seed is None else int(seed)
+        self._rng = np.random.default_rng(self._seed)
+        if self._seed is not None:
+            torch.manual_seed(self._seed)
         
         # Generate dataset
-        self.sequences = []
-        self.labels = []
+        self.sequences: List[List[int]] = []
+        self.labels: List[List[int]] = []
         self._generate_dataset()
     
     def _generate_dataset(self):
         """Generate the complete dataset."""
         for _ in range(self.num_sequences):
-            sequence, labels = self._generate_sequence()
+            # Use a stable per-sample seed derived from the dataset RNG.
+            sample_seed = int(self._rng.integers(0, 2**32 - 1))
+            sequence, labels = self._generate_sequence(sample_seed=sample_seed)
             self.sequences.append(sequence)
             self.labels.append(labels)
     
-    def _generate_sequence(self) -> Tuple[List[int], List[int]]:
-        """
-        Generate a single MQAR sequence.
-        
+    def _generate_sequence(self, *, sample_seed: int) -> Tuple[List[int], List[int]]:
+        """Generate a single MQAR example (inputs, labels).
+
+        This is a multi-query associative recall construction:
+        - The prefix stores key/value pairs (possibly repeated via num_passes).
+        - The suffix contains sparse query keys placed at power-law gaps.
+        - The model must predict the associated value token immediately after
+          seeing the query key.
+
         Returns:
-            sequence: Input sequence with kv pairs and queries
-            labels: Target labels for each position
+            sequence: input_ids of length seq_len
+            labels: length seq_len with IGNORE_INDEX except supervised positions
         """
-        sequence = []
-        labels = []
-        
-        # Generate key-value pairs
-        kv_pairs = {}
-        keys_used = set()
-        
-        for _ in range(self.num_kv_pairs):
-            # Generate unique key
-            while True:
-                key = random.randint(1, self.vocab_size)
-                if key not in keys_used:
-                    keys_used.add(key)
-                    break
-            
-            # Generate value
-            value = random.randint(1, self.vocab_size)
-            kv_pairs[key] = value
-            
-            # Add key-value pair to sequence
-            sequence.extend([key, value])
-            labels.extend([key, value])  # During storage, predict next token
-            
-            # Add noise tokens with some probability
-            if random.random() < self.noise_ratio:
-                noise_length = random.randint(1, 3)
-                for _ in range(noise_length):
-                    noise_token = random.randint(1, self.vocab_size)
-                    sequence.append(noise_token)
-                    labels.append(noise_token)
-        
-        # Add separator
-        sequence.append(self.SEP_TOKEN)
-        labels.append(self.SEP_TOKEN)
 
-        # Insert filler gap between KV section and queries (tests long-range recall)
-        # Uses a fixed filler token (FILLER = vocab_size+0, which is actually 1 since
-        # PAD=0 and true tokens start at 1 — use PAD_TOKEN as neutral filler)
-        if self.gap_tokens > 0:
-            filler = [self.PAD_TOKEN] * self.gap_tokens
-            sequence.extend(filler)
-            labels.extend(filler)
+        T = int(self.seq_len)
+        K = int(self.num_kv_pairs)
+        P = int(max(1, self.num_passes))
 
-        # Generate queries
-        query_keys = random.sample(list(keys_used), min(self.num_queries, len(keys_used)))
-        
-        for query_key in query_keys:
-            # Add query marker and key
-            sequence.extend([self.QUERY_TOKEN, query_key])
-            labels.extend([self.QUERY_TOKEN, query_key])
-            
-            # Add answer marker and correct value
-            correct_value = kv_pairs[query_key]
-            sequence.extend([self.ANSWER_TOKEN, correct_value])
-            labels.extend([self.ANSWER_TOKEN, correct_value])
-        
-        # Pad or truncate to desired length
-        if len(sequence) < self.seq_len:
-            # Pad with PAD_TOKEN
-            pad_length = self.seq_len - len(sequence)
-            sequence.extend([self.PAD_TOKEN] * pad_length)
-            labels.extend([self.PAD_TOKEN] * pad_length)
-        else:
-            # Truncate
-            sequence = sequence[:self.seq_len]
-            labels = labels[:self.seq_len]
-        
-        return sequence, labels
+        context_size = K * 2 * P
+        # We need at least 2 tokens per query (key + value slot).
+        if context_size + 2 * K > T:
+            raise ValueError(
+                f"MQAR config too large for seq_len={T}: context={context_size}, queries={2*K}"
+            )
+
+        # Split vocab into disjoint key/value pools.
+        key_hi = self.vocab_size // 2
+        rng = np.random.default_rng(int(sample_seed))
+        keys = rng.choice(np.arange(1, key_hi, dtype=np.int64), size=K, replace=False)
+        values = rng.choice(np.arange(key_hi, self.vocab_size, dtype=np.int64), size=K, replace=False)
+
+        # Build KV prefix, repeating pairs for num_passes.
+        kvs = np.zeros((context_size,), dtype=np.int64)
+        kvs[0::2] = np.tile(keys, P)
+        kvs[1::2] = np.tile(values, P)
+
+        tail_len = T - context_size
+        # We place queries at even offsets so the answer is the next token.
+        space = tail_len // 2
+
+        a = float(self.power_a)
+        x = np.arange(1, space + 1, dtype=np.float64)
+        p = a * np.power(x, a - 1.0)
+        p = p / p.sum() if p.sum() > 0 else np.full_like(p, 1.0 / len(p))
+
+        bins = rng.choice(np.arange(space, dtype=np.int64), size=K, replace=False, p=p)
+        query_offsets = bins * 2
+
+        tail = np.zeros((tail_len,), dtype=np.int64)
+        tail[query_offsets] = keys
+
+        full = np.concatenate([kvs, tail], axis=0)
+        assert full.shape[0] == T
+
+        # Labels use IGNORE_INDEX everywhere, except at the position of the
+        # query key (LM-style alignment predicts the next token).
+        labels_plus = np.full((T + 1,), self.IGNORE_INDEX, dtype=np.int64)
+        labels_plus[context_size + query_offsets + 1] = values
+
+        full_plus = np.concatenate([full, np.array([self.PAD_TOKEN], dtype=np.int64)], axis=0)
+        inputs = full_plus[:-1]
+        labels = labels_plus[1:]
+
+        if self.random_non_queries:
+            zeros = inputs == 0
+            if np.any(zeros):
+                inputs[zeros] = rng.integers(1, self.vocab_size, size=int(zeros.sum()), dtype=np.int64)
+
+        return inputs.tolist(), labels.tolist()
     
     def __len__(self) -> int:
         return self.num_sequences
@@ -179,8 +193,10 @@ class MQARDataset(Dataset):
         input_ids = torch.tensor(sequence, dtype=torch.long)
         labels_tensor = torch.tensor(labels, dtype=torch.long)
         
-        # Create attention mask (1 for non-padding tokens)
-        attention_mask = (input_ids != self.PAD_TOKEN).long()
+        # MQAR is generated without padding regions (and may contain zeros only
+        # when random_non_queries=False). Keep the mask all-ones to avoid
+        # accidental masking of valid tokens.
+        attention_mask = torch.ones_like(input_ids, dtype=torch.long)
         
         return {
             'input_ids': input_ids,
@@ -250,22 +266,15 @@ class MQARDataset(Dataset):
                 outputs = model(input_ids, attention_mask=attention_mask)
                 logits = outputs['logits'] if isinstance(outputs, dict) else outputs
                 
-                # Find answer positions
-                answer_positions = (input_ids == self.ANSWER_TOKEN)
-                
-                # Get predictions at answer positions
+                # Supervised positions are exactly those with labels != IGNORE_INDEX.
+                supervised = labels != self.IGNORE_INDEX
                 for i in range(input_ids.shape[0]):
-                    seq_answer_positions = torch.where(answer_positions[i])[0]
-                    
-                    for pos in seq_answer_positions:
-                        if pos + 1 < input_ids.shape[1]:  # Ensure we have a next token
-                            predicted_token = torch.argmax(logits[i, pos, :]).item()
-                            true_token = labels[i, pos + 1].item()
-                            
-                            if true_token != self.PAD_TOKEN:  # Skip padding
-                                total_queries += 1
-                                if predicted_token == true_token:
-                                    correct_queries += 1
+                    for pos in torch.where(supervised[i])[0].tolist():
+                        predicted = int(torch.argmax(logits[i, pos, :]).item())
+                        true_token = int(labels[i, pos].item())
+                        total_queries += 1
+                        if predicted == true_token:
+                            correct_queries += 1
         
         accuracy = correct_queries / total_queries if total_queries > 0 else 0.0
         

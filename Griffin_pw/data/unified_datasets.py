@@ -223,6 +223,11 @@ def get_dataset_info(dataset_name: str) -> dict:
             'description': 'AAN cross-document retrieval',
             'task_type': 'document_matching',
             'vocab_size': 100
+        },
+        'pg19': {
+            'description': 'PG-19 long-book language modeling (byte-level loader via benchmarks runner)',
+            'task_type': 'language_modeling',
+            'vocab_size': 257
         }
     }
 

@@ -99,7 +99,7 @@ class ModelEvaluator:
         dataloader: DataLoader
     ) -> Tuple[float, float]:
         """Compute language modeling loss and perplexity."""
-        total_loss = 0.0
+        total_nll = 0.0
         total_tokens = 0
         
         with torch.no_grad():
@@ -115,7 +115,7 @@ class ModelEvaluator:
                 logits = outputs['logits'] if isinstance(outputs, dict) else outputs
                 
                 # Compute loss
-                loss = nn.functional.cross_entropy(
+                per_token_loss = nn.functional.cross_entropy(
                     logits.view(-1, logits.shape[-1]),
                     labels.view(-1),
                     reduction='none'
@@ -124,17 +124,14 @@ class ModelEvaluator:
                 # Apply mask if available
                 if attention_mask is not None:
                     mask = attention_mask.view(-1).float()
-                    loss = (loss * mask).sum() / mask.sum()
+                    total_nll += float((per_token_loss * mask).sum().item())
+                    total_tokens += int(mask.sum().item())
                 else:
-                    loss = loss.mean()
-                
-                batch_size = input_ids.shape[0]
-                seq_len = input_ids.shape[1]
-                total_loss += loss.item() * batch_size
-                total_tokens += batch_size
+                    total_nll += float(per_token_loss.sum().item())
+                    total_tokens += int(per_token_loss.numel())
         
-        avg_loss = total_loss / total_tokens
-        perplexity = min(np.exp(avg_loss), 1e6)  # Cap perplexity to avoid overflow
+        avg_loss = (total_nll / total_tokens) if total_tokens else float('nan')
+        perplexity = min(float(np.exp(avg_loss)), 1e6)  # Cap perplexity to avoid overflow
         
         return avg_loss, perplexity
     
