@@ -1,0 +1,19 @@
+Writing results to: Griffin_pw\results\C1C2_run2_3e_20260405_040901.json
+
+========================================================================
+TASK MQAR (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=7.2044 val=6.9035 ppl=995.7106
+    epoch 2/3 train=5.7882 val=7.1313 ppl=1250.4688
+    epoch 3/3 train=4.7970 val=7.1924 ppl=1329.2726
+
+  --- Hawk ---
+    epoch 1/3 train=7.3568 val=7.3248 ppl=1517.5305
+    epoch 2/3 train=5.8582 val=7.3269 ppl=1520.6068
+    epoch 3/3 train=5.0403 val=7.3328 ppl=1529.6543
+
+  --- Local Attention ---
+    epoch 1/3 train=7.0742 val=6.7802 ppl=880.2481
+    epoch 2/3 train=6.0102 val=6.7953 ppl=893.6446

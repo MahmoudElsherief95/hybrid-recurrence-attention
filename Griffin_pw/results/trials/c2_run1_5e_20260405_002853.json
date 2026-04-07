@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "run_id": 1,
+    "timestamp": "2026-04-05 00:28:55",
+    "device": "cpu",
+    "seed": 43,
+    "config": {
+      "n_train": 1000,
+      "n_val": 200,
+      "batch_size": 16,
+      "epochs": 5,
+      "lr": 0.0003,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0,
+      "d_model": 144,
+      "layers": 6,
+      "heads": 8,
+      "local_window": 64,
+      "pathx_source": "synthetic",
+      "pathx_variant": "pathx",
+      "pathx_split": "hard",
+      "pathx_allow_truncate": false,
+      "listops_source": "lra",
+      "listops_task": "basic"
+    }
+  },
+  "group_1_recurrence_dominant": {
+    "_section": "Notebook subset C1"
+  },
+  "group_2_local_precision_dominant": {
+    "_section": "Notebook subset C2",
+    "copy_len100_seq256": {}
+  }
+}

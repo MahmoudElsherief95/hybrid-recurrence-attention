@@ -1,0 +1,248 @@
+COMBINED BENCHMARK LOG
+Generated: 2026-04-06 00:49:40
+C1 log: Griffin_pw/results/C1_only_with_PG19_run1_3e_20260405_150306.txt
+C2 log: Griffin_pw/results/C1C2_run1_3e_20260405_040901.txt
+
+================================================================================
+C1 (MQAR/MQAR512/MQAR1024/PG19)
+================================================================================
+
+Writing results to: Griffin_pw\results\C1_only_with_PG19_run1_3e_20260405_150306.json
+
+========================================================================
+TASK MQAR (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=7.1948 val=6.8365 ppl=931.2221
+    epoch 2/3 train=5.8603 val=7.0323 ppl=1132.6354
+    epoch 3/3 train=4.8769 val=7.1132 ppl=1228.0508
+
+  --- Hawk ---
+    epoch 1/3 train=7.3886 val=7.3079 ppl=1492.0221
+    epoch 2/3 train=5.8582 val=7.3233 ppl=1515.2021
+    epoch 3/3 train=5.0312 val=7.3386 ppl=1538.5276
+
+  --- Local Attention ---
+    epoch 1/3 train=7.1521 val=6.8251 ppl=920.6531
+    epoch 2/3 train=5.9857 val=6.8112 ppl=907.9716
+    epoch 3/3 train=5.2796 val=6.8362 ppl=930.9144
+
+========================================================================
+TASK MQAR_seq512 (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=7.1851 val=6.8365 ppl=931.2589
+    epoch 2/3 train=5.8915 val=7.0589 ppl=1163.1432
+    epoch 3/3 train=4.9144 val=7.1418 ppl=1263.6858
+
+  --- Hawk ---
+    epoch 1/3 train=7.3737 val=7.2905 ppl=1466.3242
+    epoch 2/3 train=5.8374 val=7.3095 ppl=1494.3624
+    epoch 3/3 train=5.0107 val=7.3184 ppl=1507.8519
+
+  --- Local Attention ---
+    epoch 1/3 train=7.1533 val=6.8399 ppl=934.4166
+    epoch 2/3 train=6.0018 val=6.8843 ppl=976.8486
+    epoch 3/3 train=5.2788 val=6.9208 ppl=1013.1512
+
+========================================================================
+TASK MQAR_seq1024 (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=8.0280 val=7.9052 ppl=2711.2671
+    epoch 2/3 train=6.1599 val=8.0086 ppl=3006.6997
+    epoch 3/3 train=5.0541 val=8.0243 ppl=3054.1416
+
+  --- Hawk ---
+    epoch 1/3 train=8.1042 val=8.0737 ppl=3208.9314
+    epoch 2/3 train=6.2824 val=8.0789 ppl=3225.8193
+    epoch 3/3 train=5.3345 val=8.0824 ppl=3236.9690
+
+  --- Local Attention ---
+    epoch 1/3 train=7.9168 val=7.7043 ppl=2217.7554
+    epoch 2/3 train=6.7149 val=7.7777 ppl=2386.7947
+    epoch 3/3 train=5.9171 val=7.8159 ppl=2479.7788
+
+========================================================================
+TASK PG19 (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=2.4832 val=2.0677 ppl=7.9066
+    epoch 2/3 train=1.9494 val=1.8871 ppl=6.6004
+    epoch 3/3 train=1.8289 val=1.8363 ppl=6.2736
+
+  --- Hawk ---
+    epoch 1/3 train=2.4849 val=2.0571 ppl=7.8235
+    epoch 2/3 train=1.9361 val=1.8742 ppl=6.5159
+    epoch 3/3 train=1.8120 val=1.8165 ppl=6.1505
+
+  --- Local Attention ---
+    epoch 1/3 train=2.7863 val=2.2635 ppl=9.6164
+    epoch 2/3 train=2.1074 val=2.0072 ppl=7.4428
+    epoch 3/3 train=1.9556 val=1.9470 ppl=7.0075
+
+Done.
+
+================================================================================
+C2 (copy_len100/path_x_clf/chomsky_clf/listops_clf)
+================================================================================
+
+Writing results to: Griffin_pw\results\C1C2_run1_3e_20260405_040901.json
+
+========================================================================
+TASK MQAR (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=0.2255 val=0.2155 ppl=1.2405
+    epoch 2/3 train=0.1862 val=0.2217 ppl=1.2482
+    epoch 3/3 train=0.1560 val=0.2237 ppl=1.2507
+
+  --- Hawk ---
+    epoch 1/3 train=0.2309 val=0.2285 ppl=1.2567
+    epoch 2/3 train=0.1835 val=0.2289 ppl=1.2572
+    epoch 3/3 train=0.1599 val=0.2294 ppl=1.2578
+
+  --- Local Attention ---
+    epoch 1/3 train=0.2238 val=0.2143 ppl=1.2390
+    epoch 2/3 train=0.1891 val=0.2138 ppl=1.2383
+    epoch 3/3 train=0.1678 val=0.2144 ppl=1.2391
+
+========================================================================
+TASK MQAR_seq512 (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=0.1126 val=0.1078 ppl=1.1138
+    epoch 2/3 train=0.0937 val=0.1114 ppl=1.1179
+    epoch 3/3 train=0.0788 val=0.1124 ppl=1.1190
+
+  --- Hawk ---
+    epoch 1/3 train=0.1152 val=0.1140 ppl=1.1207
+    epoch 2/3 train=0.0914 val=0.1142 ppl=1.1210
+    epoch 3/3 train=0.0796 val=0.1143 ppl=1.1211
+
+  --- Local Attention ---
+    epoch 1/3 train=0.1119 val=0.1075 ppl=1.1135
+    epoch 2/3 train=0.0949 val=0.1080 ppl=1.1141
+    epoch 3/3 train=0.0838 val=0.1085 ppl=1.1146
+
+========================================================================
+TASK MQAR_seq1024 (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=0.0627 val=0.0619 ppl=1.0639
+    epoch 2/3 train=0.0485 val=0.0626 ppl=1.0646
+    epoch 3/3 train=0.0401 val=0.0627 ppl=1.0647
+
+  --- Hawk ---
+    epoch 1/3 train=0.0633 val=0.0631 ppl=1.0651
+    epoch 2/3 train=0.0491 val=0.0631 ppl=1.0651
+    epoch 3/3 train=0.0424 val=0.0631 ppl=1.0652
+
+  --- Local Attention ---
+    epoch 1/3 train=0.0619 val=0.0605 ppl=1.0623
+    epoch 2/3 train=0.0531 val=0.0610 ppl=1.0629
+    epoch 3/3 train=0.0468 val=0.0612 ppl=1.0631
+
+========================================================================
+TASK copy_len256_seq512 (group_1_recurrence_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=6.9698 val=6.9176 ppl=1009.9368
+    epoch 2/3 train=6.9129 val=6.9134 ppl=1005.6378
+    epoch 3/3 train=6.9030 val=6.9127 ppl=1004.9183
+
+  --- Hawk ---
+    epoch 1/3 train=6.9708 val=6.9166 ppl=1008.8880
+    epoch 2/3 train=6.9143 val=6.9113 ppl=1003.5598
+    epoch 3/3 train=6.9090 val=6.9104 ppl=1002.6844
+
+  --- Local Attention ---
+    epoch 1/3 train=6.9783 val=6.9161 ppl=1008.3883
+    epoch 2/3 train=6.9129 val=6.9126 ppl=1004.8201
+    epoch 3/3 train=6.9078 val=6.9110 ppl=1003.2321
+
+========================================================================
+TASK copy_len100_seq256 (group_2_local_precision_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train=7.0349 val=6.9303 ppl=1022.7620
+    epoch 2/3 train=6.9105 val=6.9186 ppl=1010.8845
+    epoch 3/3 train=6.8886 val=6.9186 ppl=1010.8691
+
+  --- Hawk ---
+    epoch 1/3 train=7.0192 val=6.9234 ppl=1015.7430
+    epoch 2/3 train=6.9152 val=6.9151 ppl=1007.3570
+    epoch 3/3 train=6.9062 val=6.9136 ppl=1005.8426
+
+  --- Local Attention ---
+    epoch 1/3 train=7.0290 val=6.8717 ppl=964.6010
+    epoch 2/3 train=6.7814 val=6.8115 ppl=908.2734
+    epoch 3/3 train=6.6729 val=6.7990 ppl=896.9322
+
+========================================================================
+TASK path_x_clf (group_2_local_precision_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train_loss=0.7555 val_loss=0.8252 acc=47.0%
+    epoch 2/3 train_loss=0.6970 val_loss=0.6822 acc=54.0%
+    epoch 3/3 train_loss=0.6721 val_loss=0.6669 acc=56.0%
+
+  --- Hawk ---
+    epoch 1/3 train_loss=0.7992 val_loss=0.7097 acc=54.0%
+    epoch 2/3 train_loss=0.7093 val_loss=0.7175 acc=50.0%
+    epoch 3/3 train_loss=0.6896 val_loss=0.6954 acc=49.5%
+
+  --- Local Attention ---
+    epoch 1/3 train_loss=0.7198 val_loss=0.7587 acc=47.0%
+    epoch 2/3 train_loss=0.6839 val_loss=0.6711 acc=58.0%
+    epoch 3/3 train_loss=0.6674 val_loss=0.6698 acc=61.0%
+
+========================================================================
+TASK chomsky_clf (group_2_local_precision_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train_loss=0.2823 val_loss=0.0071 acc=100.0%
+    epoch 2/3 train_loss=0.0336 val_loss=0.0027 acc=100.0%
+    epoch 3/3 train_loss=0.0195 val_loss=0.0020 acc=100.0%
+
+  --- Hawk ---
+    epoch 1/3 train_loss=0.7514 val_loss=0.6960 acc=54.0%
+    epoch 2/3 train_loss=0.6801 val_loss=0.6669 acc=56.5%
+    epoch 3/3 train_loss=0.6328 val_loss=0.6172 acc=65.5%
+
+  --- Local Attention ---
+    epoch 1/3 train_loss=0.6556 val_loss=0.2122 acc=91.0%
+    epoch 2/3 train_loss=0.1429 val_loss=0.0176 acc=100.0%
+    epoch 3/3 train_loss=0.0734 val_loss=0.0180 acc=100.0%
+
+========================================================================
+TASK listops_clf (group_2_local_precision_dominant)
+========================================================================
+
+  --- Griffin ---
+    epoch 1/3 train_loss=2.3430 val_loss=2.3222 acc=15.5%
+    epoch 2/3 train_loss=2.2420 val_loss=2.2969 acc=12.0%
+    epoch 3/3 train_loss=2.1943 val_loss=2.2891 acc=14.0%
+
+  --- Hawk ---
+    epoch 1/3 train_loss=2.4277 val_loss=2.3592 acc=10.0%
+    epoch 2/3 train_loss=2.2620 val_loss=2.3353 acc=16.5%
+    epoch 3/3 train_loss=2.1847 val_loss=2.3451 acc=13.5%
+
+  --- Local Attention ---
+    epoch 1/3 train_loss=2.3242 val_loss=2.2545 acc=17.0%
+    epoch 2/3 train_loss=2.2656 val_loss=2.2579 acc=18.0%
+    epoch 3/3 train_loss=2.2328 val_loss=2.2509 acc=15.5%
+
+Done.
