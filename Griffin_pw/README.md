@@ -1,4 +1,4 @@
-# Griffin vs Hawk vs Local Attention — Benchmark Suite
+# Griffin vs Hawk vs Local Attention : Benchmark Suite
 
 An empirical comparison of three small sequence model architectures on synthetic benchmarks designed to isolate the specific capabilities each architecture is built for. The central question is whether Griffin's hybrid design (recurrence + local attention) delivers the best of both worlds without trading one off against the other.
 
@@ -18,10 +18,7 @@ All three models are matched at approximately 2M parameters for a fair architect
 
 ## Experimental Design
 
-Benchmarks are split into two groups based on what the task structurally demands:
-
-- C1 — Recurrence Dominant: Tasks where relevant context lies beyond the 64-token window. Recurrent models (Griffin, Hawk) should dominate; Local Attention should degrade as sequence length grows.
-- C2 — Local Attention Dominant: Tasks requiring both local precision and broader reach. Griffin's hybrid design should outperform both pure baselines.
+This benchmark suite focuses on a **small, repeatable set of tasks** that isolate different sequence-processing demands (associative recall, long-context LM, exact copying, and structured classification). The goal is to compare whether the **hybrid** design (recurrence + local attention) can match the strengths of pure recurrence and pure local attention without regressing.
 
 ---
 
@@ -38,100 +35,132 @@ pip install -r requirements.txt
 
 ## Running the Benchmarks
 
-### Run everything
+This repo’s **maintained** benchmark runner is:
 
 ```bash
-python run_all_benchmarks.py
+python benchmarks/run_selected_benchmarks.py
 ```
 
-This runs all six benchmark suites sequentially. Results accumulate in `results/complete_benchmark.json`. The run is crash-safe: each model's result is written immediately after training, so a partial run can be resumed without re-running completed entries.
+Entrypoint file:
 
-### Run individual suites
+- `Griffin_pw/benchmarks/run_selected_benchmarks.py`
+
+Windows path (example):
+
+- `C:\Users\Elsherief\Documents\hybrid-recurrence-attention-1\Griffin_pw\benchmarks\run_selected_benchmarks.py`
+
+It runs the **exact 8 datasets used in** `notebooks/model_analysis.ipynb` and writes the canonical results file:
+
+- `results/complete_benchmark.json`
+
+Note:
+- `results/complete_benchmark.json` is the only file intended to be treated as the **canonical output**.
+- `results/trials/` is for intermediate runs, merged files, and backups.
+
+### Quickstart (recommended)
+
+From `Griffin_pw/`:
 
 ```bash
-# Core language modelling tasks (MQAR, Induction Heads, Copy, Selective Copy, NIAH)
-python run_5_benchmarks.py
-
-# AAN long-range recall test (400-token filler gap)
-python run_aan_benchmark.py
-
-# Classification tasks (Chomsky, Path-X, ListOps)
-python run_classification_benchmarks.py
-
-# Copy task at increasing sequence lengths
-python run_copy_seq_len.py
-
-# MQAR + Induction Heads at seq = 256 / 512 / 1024
-python run_seq_scaling.py
-
-# MQAR gap-size ablation (find Local Attention's exact failure point)
-python run_mqar_breaking_point.py
+python benchmarks/run_selected_benchmarks.py --run-id 1
 ```
 
-All scripts are located in the project root. Equivalent copies are also available under `benchmarks/`.
+### Run a specific dataset (for a quick test)
+
+List available task keys:
+
+```bash
+python benchmarks/run_selected_benchmarks.py --list-tasks
+```
+
+Run one dataset:
+
+```bash
+python benchmarks/run_selected_benchmarks.py --tasks MQAR
+python benchmarks/run_selected_benchmarks.py --tasks path_x_clf
+```
+
+Run a small subset:
+
+```bash
+python benchmarks/run_selected_benchmarks.py --tasks MQAR,copy_len100_seq256,listops_clf
+```
+
+Notes:
+- PG-19 is **optional** and is skipped unless you pass `--pg19-root` or `--pg19-zip`.
+- Results are written after **every model**, so runs are crash-safe.
+- If `results/complete_benchmark.json` already exists, the runner will **resume** and skip entries that are already present.
+    Use `--overwrite` (or `--out results/some_new_file.json`) to start fresh.
 
 ---
 
-## Benchmark Suites
+## Using Official Upstream Datasets (recommended)
 
-### 1 · Core LM Benchmarks — `run_5_benchmarks.py`
+This repo includes several synthetic/proxy datasets. When available, the selected runner supports using official upstream sources.
 
-Language modelling tasks; metric is perplexity (lower is better).
+### Option A — Point to an existing LRA ListOps directory
 
-| Dataset | JSON key | What it tests |
+If you already have the LRA TSV files (e.g. `basic_train.tsv`, `basic_val.tsv`, `basic_test.tsv`), run:
+
+```bash
+python benchmarks/run_selected_benchmarks.py --tasks listops_clf \
+    --listops-source lra --listops-official-dir /path/to/listops_tsv_dir
+```
+
+### Option B — Auto-download the LRA public release archive
+
+```bash
+python benchmarks/run_selected_benchmarks.py --tasks listops_clf \
+    --listops-source lra --download-official
+```
+
+Notes:
+- Downloading can be large; the archive is cached under `data_cache/` (inside `Griffin_pw/`) by default.
+- Other tasks in this suite are still synthetic/proxy unless explicitly wired to an upstream source.
+
+### If download fails (e.g. HTTP 403)
+
+Some networks block direct downloads from `storage.googleapis.com`. If `--download-official` fails, download `lra_release.gz` manually (browser or `curl.exe`) and point the code at the local file:
+
+- PowerShell example:
+
+```powershell
+$env:LRA_RELEASE_ARCHIVE_PATH = "C:\path\to\lra_release.gz"
+python benchmarks/run_selected_benchmarks.py --tasks listops_clf --listops-source lra
+```
+
+If the archive is access-controlled (AccessDenied) and you cannot download it at all, you can still generate **official-format ListOps TSV** locally using the generator (official ListOps is defined by the generator + protocol):
+
+In that case, you can still run the benchmark suite using the synthetic/proxy datasets (default settings).
+
+### PG-19 (official split)
+
+PG-19 is a byte-level LM task and requires local data.
+
+```bash
+python benchmarks/run_selected_benchmarks.py --tasks PG19 --pg19-root /path/to/pg19
+# or
+python benchmarks/run_selected_benchmarks.py --tasks PG19 --pg19-zip /path/to/pg19.zip
+```
+
+---
+
+## Datasets in the notebook subset
+
+The selected runner executes these 8 tasks:
+
+### Task list
+
+| Dataset | Task key | Primary metric in analysis |
 |---|---|---|
-| MQAR | `MQAR` | Multi-query associative recall — KV pairs spread > 64 tokens apart |
-| Induction Heads | `induction_heads` | Copy-from-context induction pattern |
-| Copy | `copy` | Exact copy of a prefix (copy_len=100 > window=64) |
-| Selective Copy | `selective_copy` | Copy only marked tokens — requires selection and memory |
-| Sequential NIAH | `sequential_niah` | Multi-needle sequential retrieval |
-
-### 2 · AAN Long-Range Test — `run_aan_benchmark.py`
-
-Forces recall across a 400-token filler gap (> 384 tokens = 6 × the 64-token local window). JSON key: `aan_long_range`.
-
-### 3 · Classification Benchmarks — `run_classification_benchmarks.py`
-
-Metric is validation accuracy % (higher is better). A classification head is trained on the final hidden state.
-
-| Dataset | JSON key | Classes | What it tests |
-|---|---|---|---|
-| Chomsky CFG | `chomsky_clf` | 2 | Balanced-parentheses recognition |
-| Path-X | `path_x_clf` | 2 | Long-range pixel-path connectivity |
-| ListOps | `listops_clf` | 10 | Nested MIN/MAX/SUM expression evaluation |
-
-### 4 · Copy Seq-Length Scaling — `run_copy_seq_len.py`
-
-Runs the copy task at increasing lengths to show Local Attention degrading as `copy_len` exceeds the window.
-
-| Config | JSON key | Note |
-|---|---|---|
-| copy_len=100, seq=256 | `copy_len100_seq256` | copy span > window |
-| copy_len=256, seq=512 | `copy_len256_seq512` | copy span >> window |
-| copy_len=512, seq=1024 | `copy_len512_seq1024` | copy span >>> window |
-
-### 5 · Sequence-Length Scaling — `run_seq_scaling.py`
-
-MQAR and Induction Heads at three sequence lengths to demonstrate recurrence scalability.
-
-| Dataset | seq_len | JSON key |
-|---|---|---|
-| MQAR | 256 | `MQAR` |
-| MQAR | 512 | `MQAR_seq512` |
-| MQAR | 1024 | `MQAR_seq1024` |
-| Induction Heads | 256 | `induction_heads` |
-| Induction Heads | 512 | `induction_heads_seq512` |
-| Induction Heads | 1024 | `induction_heads_seq1024` |
-
-### 6 · MQAR Gap Ablation — `run_mqar_breaking_point.py`
-
-Varies the gap between KV pairs and their queries to locate Local Attention's exact breaking point.
-
-| Gap | JSON key |
-|---|---|
-| 0 | `MQAR_gap0` |
-| 100 | `MQAR_gap100` |
-| 200 | `MQAR_gap200` |
+| MQAR (seq=256) | `MQAR` | Perplexity ↓ |
+| MQAR (seq=512) | `MQAR_seq512` | Perplexity ↓ |
+| MQAR (seq=1024) | `MQAR_seq1024` | Perplexity ↓ |
+| PG-19 (byte LM, optional) | `PG19` | Perplexity ↓ |
+| Copy (len=100, seq=256) | `copy_len100_seq256` | Perplexity ↓ |
+| Path-X (classification) | `path_x_clf` | Classification perplexity (val) ↓ |
+| Chomsky (classification) | `chomsky_clf` | Classification perplexity (val) ↓ |
+| ListOps (classification) | `listops_clf` | Classification perplexity (val) ↓ |
 
 ---
 
@@ -139,18 +168,8 @@ Varies the gap between KV pairs and their queries to locate Local Attention's ex
 
 ```
 Griffin_pw/
-├── run_all_benchmarks.py              # Master runner — executes all 6 suites
-├── run_5_benchmarks.py                # Core LM benchmarks
-├── run_aan_benchmark.py               # AAN long-range test
-├── run_classification_benchmarks.py   # Chomsky / Path-X / ListOps
-├── run_copy_seq_len.py                # Copy task scaling
-├── run_seq_scaling.py                 # MQAR + Induction Heads scaling
-├── run_mqar_breaking_point.py         # MQAR gap ablation
-├── griffin.yaml                       # Griffin model config
-├── hawk.yaml                          # Hawk model config
-├── local_attention.yaml               # Local Attention model config
-│
-├── benchmarks/                        # Duplicate copies of benchmark runners
+├── benchmarks/
+│   └── run_selected_benchmarks.py     # Canonical runner (8 notebook datasets)
 │
 ├── data/                              # Dataset implementations
 │   ├── unified_datasets.py            # Shared dataset interface for LM runners
@@ -178,11 +197,7 @@ Griffin_pw/
 │   └── evaluator.py
 │
 ├── results/
-│   ├── complete_benchmark.json        # Canonical results file
-│   ├── benchmark_performance.csv      # Performance pivot (auto-generated)
-│   ├── benchmark_efficiency.csv       # Efficiency metrics (auto-generated)
-│   ├── figures/                       # Saved plots
-│   └── logs/                          # Per-run training logs
+│   └── complete_benchmark.json        # Canonical results file (generated)
 │
 ├── notebooks/
 │   └── model_analysis.ipynb           # Full results analysis and visualization
@@ -202,35 +217,71 @@ import json
 with open("results/complete_benchmark.json") as f:
     results = json.load(f)
 
+
+def get_task_block(results_dict: dict, task_key: str) -> dict:
+    """Find a task block regardless of which top-level section it lives in."""
+    for section_key, section_val in results_dict.items():
+        if section_key == "_meta" or not isinstance(section_val, dict):
+            continue
+        task_block = section_val.get(task_key)
+        if isinstance(task_block, dict):
+            return task_block
+    raise KeyError(f"Task '{task_key}' not found")
+
 # Example: MQAR perplexity across models
-for model, data in results["group_1_recurrence_dominant"]["MQAR"].items():
-    print(f"{model:20s}  ppl={data['perplexity']:.4f}")
+mqar = get_task_block(results, "MQAR")
+for model, data in mqar.items():
+    if not isinstance(data, dict):
+        continue
+    ppl = data.get("validation_perplexity", data.get("perplexity", float("nan")))
+    print(f"{model:20s}  ppl={ppl:.2f}")
+
+# Example: classification perplexity (val) from explicit field, or exp(validation_loss)
+import math
+
+pathx = get_task_block(results, "path_x_clf")
+for model, data in pathx.items():
+    if not isinstance(data, dict):
+        continue
+    clfppl = data.get("validation_classification_perplexity", data.get("classification_perplexity"))
+    if not isinstance(clfppl, (int, float)):
+        val_loss = data.get("validation_loss")
+        clfppl = math.exp(val_loss) if isinstance(val_loss, (int, float)) else float("nan")
+    acc = data.get("val_accuracy_pct", float("nan"))
+    print(f"{model:20s}  clfppl={clfppl:.2f}  acc={acc:.2f}%")
 ```
 
 For a full analysis with tables and figures, open `notebooks/model_analysis.ipynb`.
 
-### Key findings
+---
+### Key findings (high level)
 
-C1 : Recurrence Dominant (MQAR):
+- The suite is designed so each task stresses a particular capability (long-range recall, local precision, or structured classification).
+- The notebook reports **perplexity-only** for the main comparison table; classification uses **classification perplexity (val)** (with `exp(validation_loss)` as fallback when needed).
+- The most reliable way to interpret results is via `notebooks/model_analysis.ipynb`, which generates the tables/figures directly from `results/complete_benchmark.json`.
 
-| Task | Griffin | Hawk | Local Attention |
-|---|---|---|---|
-| MQAR (seq=256) | 1.014 | 1.007 | 1.251 |
-| MQAR (seq=512) | 1.227 | 1.082 | 1.771 |
-| MQAR (seq=1024) | 1.125 | 1.052 | 1.341 |
+---
 
-Griffin stays within 0.15 PPL of Hawk across all sequence lengths — the hybrid does not regress on recurrence quality.
+## Useful commands (end-to-end + single-task)
 
-C2 : Local Attention Dominant:
+List available task keys:
 
-| Task | Griffin | Hawk | Local Attention |
-|---|---|---|---|
-| copy_len100 (PPL) | 2.86 | 15.03 | 13.37 |
-| Path-X (Acc %) | 99.5 | 57.0 | 98.5 |
-| Chomsky (Acc %) | 78.5 | 66.0 | 77.0 |
-| ListOps (Acc %) | 45.0 | 25.0 | 45.0 |
+```bash
+python benchmarks/run_selected_benchmarks.py --list-tasks
+```
 
-Griffin uniquely solves `copy_len100` (copy span > local window), achieving 5× lower perplexity than either pure model.
+Run a single dataset (quick test):
+
+```bash
+python benchmarks/run_selected_benchmarks.py --tasks MQAR
+python benchmarks/run_selected_benchmarks.py --tasks path_x_clf
+```
+
+Run a small subset:
+
+```bash
+python benchmarks/run_selected_benchmarks.py --tasks MQAR,copy_len100_seq256,listops_clf
+```
 
 ---
 
